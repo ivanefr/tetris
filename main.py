@@ -40,10 +40,12 @@ class Tetris:
         self.HEIGHT = 500
         self.size = self.WIDTH, self.HEIGHT
 
+        self.BLOCK = 20
+
         self.CUP_WIDTH = 10
         self.CUP_HEIGHT = 20
-
-        self.BLOCK = 20
+        self.CUP_X = self.WIDTH // 2 - (self.CUP_WIDTH // 2) * self.BLOCK
+        self.CUP_Y = 50
 
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
@@ -91,13 +93,9 @@ class Tetris:
         return None
 
     def start_window(self):
-        font = pygame.font.SysFont('timesnewroman', 40)
-        text = font.render("Tetris", True, self.WHITE)
-        rect = text.get_rect()
-        rect.centerx = int(self.WIDTH / 2)
-        rect.y = 0
-        self.screen.blit(text, rect)
+        self.draw_title()
 
+        font = pygame.font.SysFont('timesnewroman', 40)
         text = font.render("Выберите уровень сложности:", True, self.WHITE)
         rect = text.get_rect()
         rect.centerx = int(self.WIDTH / 2)
@@ -135,12 +133,33 @@ class Tetris:
             level = self.start_window()
             self.run(level)
 
-    def run(self, level):
-        cup = self.new_cup()
+    def draw_title(self):
+        font = pygame.font.SysFont('timesnewroman', 40)
+        text = font.render("Tetris", True, self.WHITE)
+        rect = text.get_rect()
+        rect.centerx = int(self.WIDTH / 2)
+        rect.y = 0
+        self.screen.blit(text, rect)
 
-    @staticmethod
+    def run(self, level):
+        self.screen.fill(self.BLACK)
+        cup = self.new_cup()
+        self.draw_title()
+        self.draw_cup()
+        while True:
+            pygame.display.update()
+
+    def draw_cup(self):
+        pygame.draw.rect(self.screen,
+                         self.WHITE,
+                         (self.CUP_X, self.CUP_Y,
+                          self.CUP_WIDTH * self.BLOCK,
+                          self.CUP_HEIGHT * self.BLOCK,
+                          ), 1)
+
     def new_cup(self):
-        ...
+        cup = [['0' for i in range(self.CUP_WIDTH)] for j in range(self.CUP_HEIGHT)]
+        return cup
 
 
 if __name__ == "__main__":
