@@ -1,6 +1,9 @@
 import sys
+import random
+import time
 
 import pygame
+from pprint import pprint
 
 
 class Button:
@@ -53,6 +56,104 @@ class Tetris:
         self.BLUE = (0, 0, 255)
         self.RED = (255, 0, 0)
         self.YELLOW = (255, 255, 0)
+
+        self.colors = [self.GREEN, self.BLUE, self.RED, self.YELLOW]
+
+        self.figures = {'S': [['     ',
+                               '     ',
+                               '  xx ',
+                               ' xx  ',
+                               '     '],
+                              ['     ',
+                               '  x  ',
+                               '  xx ',
+                               '   x ',
+                               '     ']],
+                        'Z': [['     ',
+                               '     ',
+                               ' xx  ',
+                               '  xx ',
+                               '     '],
+                              ['     ',
+                               '  x  ',
+                               ' xx  ',
+                               ' x   ',
+                               '     ']],
+                        'J': [['     ',
+                               ' x   ',
+                               ' xxx ',
+                               '     ',
+                               '     '],
+                              ['     ',
+                               '  xx ',
+                               '  x  ',
+                               '  x  ',
+                               '     '],
+                              ['     ',
+                               '     ',
+                               ' xxx ',
+                               '   x ',
+                               '     '],
+                              ['     ',
+                               '  x  ',
+                               '  x  ',
+                               ' xx  ',
+                               '     ']],
+                        'L': [['     ',
+                               '   x ',
+                               ' xxx ',
+                               '     ',
+                               '     '],
+                              ['     ',
+                               '  x  ',
+                               '  x  ',
+                               '  xx ',
+                               '     '],
+                              ['     ',
+                               '     ',
+                               ' xxx ',
+                               ' x   ',
+                               '     '],
+                              ['     ',
+                               ' xx  ',
+                               '  x  ',
+                               '  x  ',
+                               '     ']],
+                        'I': [['  x  ',
+                               '  x  ',
+                               '  x  ',
+                               '  x  ',
+                               '     '],
+                              ['     ',
+                               '     ',
+                               'xxxx ',
+                               '     ',
+                               '     ']],
+                        'O': [['     ',
+                               '     ',
+                               ' xx  ',
+                               ' xx  ',
+                               '     ']],
+                        'T': [['     ',
+                               '  x  ',
+                               ' xxx ',
+                               '     ',
+                               '     '],
+                              ['     ',
+                               '  x  ',
+                               '  xx ',
+                               '  x  ',
+                               '     '],
+                              ['     ',
+                               '     ',
+                               ' xxx ',
+                               '  x  ',
+                               '     '],
+                              ['     ',
+                               '  x  ',
+                               ' xx  ',
+                               '  x  ',
+                               '     ']]}
 
         self.pygame_init()
 
@@ -141,15 +242,97 @@ class Tetris:
         rect.y = 0
         self.screen.blit(text, rect)
 
+    def get_figure(self):
+        shape = random.choice(list(self.figures.keys()))
+        rotation = random.choice(self.figures[shape])
+        color = random.choice(self.colors)
+        res = {'shape': shape,
+               'fig': rotation,
+               'color': color,
+               'x': 3,
+               'y': 0}
+        return res
+
+    def check_pos(self, cup, fig, deltax=0, deltay=0):
+        fig_coor = []
+        for i in range(5):
+            for j in range(5):
+                if fig['fig'][i][j] == 'x':
+                    fig_coor.append([j, i])
+        for i in range(len(fig_coor)):
+            fig_coor[i][0] += fig['x'] + deltax
+            fig_coor[i][1] += fig['y'] + deltay
+        for x, y in fig_coor:
+            if x < 0 or x > self.CUP_WIDTH - 1:
+                return False
+            if y < 0 or y > self.CUP_HEIGHT - 1:
+                return False
+            if cup[x][y] != ' ':
+                return False
+        return True
+
+    def add_fig(self, cup, fig):
+        for i in range(5):
+            for j in range(5):
+                if fig['fig'][j][i] != ' ':
+                    cup[fig['x'] + i][fig['y'] + j] = self.colors.index(fig['color'])
+
+    def draw_fig(self, fig):
+        for x in range(5):
+            for y in range(5):
+                if fig['fig'][y][x] != ' ':
+                    pygame.draw.rect(self.screen, fig['color'],
+                                     (self.CUP_X + self.BLOCK * (fig['x'] + x) + 1,
+                                      self.CUP_Y + self.BLOCK * (fig['y'] + y) + 1,
+                                      self.BLOCK - 2, self.BLOCK - 2))
+
     def run(self, level):
         self.screen.fill(self.BLACK)
         cup = self.new_cup()
-        self.draw_title()
-        self.draw_cup()
-        while True:
-            pygame.display.update()
 
-    def draw_cup(self):
+        self.draw_title()
+        self.draw_cup(cup)
+
+        fig = self.get_figure()
+        next_fig = self.get_figure()
+
+        last_fall = time.time()
+        while True:
+            self.check_exit()
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        if self.check_pos(cup, fig, -1):
+                            fig['x'] -= 1
+                    elif event.key == pygame.K_RIGHT:
+                        if self.check_pos(cup, fig, 1):
+                            fig['x'] += 1
+                    elif event.key == pygame.K_UP:
+                        rotations = self.figures[fig['shape']]
+                        rotation = (rotations.index(fig['fig']) + 1) % len(rotations)
+                        fig['fig'] = rotations[rotation]
+                        if not self.check_pos(cup, fig):
+                            rotation = (rotations.index(fig['fig']) - 1) % len(rotations)
+                            fig['fig'] = rotations[rotation]
+            if time.time() - last_fall > 0.5:
+                if self.check_pos(cup, fig, 0, 1):
+                    fig['y'] += 1
+                    last_fall = time.time()
+                else:
+                    self.add_fig(cup, fig)
+                    fig = next_fig
+                    next_fig = self.get_figure()
+                    if not self.check_pos(cup, fig):
+                        return False
+
+            self.screen.fill(self.BLACK)
+            self.draw_title()
+            self.draw_cup(cup)
+            self.draw_fig(fig)
+            pygame.display.update()
+            self.clock.tick()
+
+    def draw_cup(self, cup):
         pygame.draw.rect(self.screen,
                          self.WHITE,
                          (self.CUP_X, self.CUP_Y,
@@ -157,8 +340,16 @@ class Tetris:
                           self.CUP_HEIGHT * self.BLOCK,
                           ), 1)
 
+        for x in range(self.CUP_WIDTH):
+            for y in range(self.CUP_HEIGHT):
+                if cup[x][y] != ' ':
+                    pygame.draw.rect(self.screen, self.colors[cup[x][y]],
+                                     (self.CUP_X + self.BLOCK * x + 1,
+                                      self.CUP_Y + self.BLOCK * y + 1,
+                                      self.BLOCK - 2, self.BLOCK - 2))
+
     def new_cup(self):
-        cup = [['0' for i in range(self.CUP_WIDTH)] for j in range(self.CUP_HEIGHT)]
+        cup = [[' ' for i in range(self.CUP_HEIGHT)] for j in range(self.CUP_WIDTH)]
         return cup
 
 
