@@ -35,10 +35,16 @@ class Button:
 class Tetris:
     def __init__(self):
         self.FPS = 25
+
         self.WIDTH = 600
         self.HEIGHT = 500
         self.size = self.WIDTH, self.HEIGHT
+
+        self.CUP_WIDTH = 10
+        self.CUP_HEIGHT = 20
+
         self.BLOCK = 20
+
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
         self.GREEN = (0, 255, 0)
@@ -125,7 +131,16 @@ class Tetris:
         return btn
 
     def play(self):
-        print(self.start_window())
+        while True:
+            level = self.start_window()
+            self.run(level)
+
+    def run(self, level):
+        cup = self.new_cup()
+
+    @staticmethod
+    def new_cup(self):
+        ...
 
 
 if __name__ == "__main__":
