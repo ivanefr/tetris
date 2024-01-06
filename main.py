@@ -1,9 +1,7 @@
 import sys
 import random
 import time
-
 import pygame
-from pprint import pprint
 
 
 class Button:
@@ -35,6 +33,151 @@ class Button:
         return self.text
 
 
+class Figure:
+    figures = {'S': [['     ',
+                      '     ',
+                      '  xx ',
+                      ' xx  ',
+                      '     '],
+                     ['     ',
+                      '  x  ',
+                      '  xx ',
+                      '   x ',
+                      '     ']],
+               'Z': [['     ',
+                      '     ',
+                      ' xx  ',
+                      '  xx ',
+                      '     '],
+                     ['     ',
+                      '  x  ',
+                      ' xx  ',
+                      ' x   ',
+                      '     ']],
+               'J': [['     ',
+                      ' x   ',
+                      ' xxx ',
+                      '     ',
+                      '     '],
+                     ['     ',
+                      '  xx ',
+                      '  x  ',
+                      '  x  ',
+                      '     '],
+                     ['     ',
+                      '     ',
+                      ' xxx ',
+                      '   x ',
+                      '     '],
+                     ['     ',
+                      '  x  ',
+                      '  x  ',
+                      ' xx  ',
+                      '     ']],
+               'L': [['     ',
+                      '   x ',
+                      ' xxx ',
+                      '     ',
+                      '     '],
+                     ['     ',
+                      '  x  ',
+                      '  x  ',
+                      '  xx ',
+                      '     '],
+                     ['     ',
+                      '     ',
+                      ' xxx ',
+                      ' x   ',
+                      '     '],
+                     ['     ',
+                      ' xx  ',
+                      '  x  ',
+                      '  x  ',
+                      '     ']],
+               'I': [['     ',
+                      '  x  ',
+                      '  x  ',
+                      '  x  ',
+                      '  x  '],
+                     ['     ',
+                      '     ',
+                      'xxxx ',
+                      '     ',
+                      '     ']],
+               'O': [['     ',
+                      '     ',
+                      ' xx  ',
+                      ' xx  ',
+                      '     ']],
+               'T': [['     ',
+                      '  x  ',
+                      ' xxx ',
+                      '     ',
+                      '     '],
+                     ['     ',
+                      '  x  ',
+                      '  xx ',
+                      '  x  ',
+                      '     '],
+                     ['     ',
+                      '     ',
+                      ' xxx ',
+                      '  x  ',
+                      '     '],
+                     ['     ',
+                      '  x  ',
+                      ' xx  ',
+                      '  x  ',
+                      '     ']]}
+    GREEN = (0, 255, 0)
+    BLUE = (0, 0, 255)
+    RED = (255, 0, 0)
+    YELLOW = (255, 255, 0)
+    colors = [GREEN, BLUE, RED, YELLOW]
+
+    def __init__(self, shape: str, rotation: int, color: int):
+        self.shape = shape
+        self.rotation = rotation
+        self.fig = Figure.figures[self.shape][rotation]
+        self.color = color
+        self.x = 3
+        self.y = -1
+
+    @property
+    def get_fig_coor(self):
+        fig_coor = []
+        for i in range(5):
+            for j in range(5):
+                if self[i, j]:
+                    fig_coor.append([j, i])
+        for i in range(len(fig_coor)):
+            fig_coor[i][0] += self.x
+            fig_coor[i][1] += self.y
+        return fig_coor
+
+    @property
+    def get_color(self):
+        return Figure.colors[self.color]
+
+    def __getitem__(self, index):
+        return self.fig[index[0]][index[1]] == 'x'
+
+    @classmethod
+    def generate_figure(cls):
+        shape = random.choice(list(cls.figures.keys()))
+        rotation = random.randint(0, len(cls.figures[shape]) - 1)
+        color = random.randint(0, len(cls.colors) - 1)
+        return cls(shape, rotation, color)
+
+    def next_rotation(self):
+        self.rotation = (self.rotation + 1) % len(Figure.figures[self.shape])
+        self.fig = Figure.figures[self.shape][self.rotation]
+
+    def previous_rotation(self):
+        self.rotation = (self.rotation - 1) % len(Figure.figures[self.shape])
+        self.fig = Figure.figures[self.shape][self.rotation]
+
+
 class Tetris:
     def __init__(self):
         self.FPS = 25
@@ -58,102 +201,6 @@ class Tetris:
         self.YELLOW = (255, 255, 0)
 
         self.colors = [self.GREEN, self.BLUE, self.RED, self.YELLOW]
-
-        self.figures = {'S': [['     ',
-                               '     ',
-                               '  xx ',
-                               ' xx  ',
-                               '     '],
-                              ['     ',
-                               '  x  ',
-                               '  xx ',
-                               '   x ',
-                               '     ']],
-                        'Z': [['     ',
-                               '     ',
-                               ' xx  ',
-                               '  xx ',
-                               '     '],
-                              ['     ',
-                               '  x  ',
-                               ' xx  ',
-                               ' x   ',
-                               '     ']],
-                        'J': [['     ',
-                               ' x   ',
-                               ' xxx ',
-                               '     ',
-                               '     '],
-                              ['     ',
-                               '  xx ',
-                               '  x  ',
-                               '  x  ',
-                               '     '],
-                              ['     ',
-                               '     ',
-                               ' xxx ',
-                               '   x ',
-                               '     '],
-                              ['     ',
-                               '  x  ',
-                               '  x  ',
-                               ' xx  ',
-                               '     ']],
-                        'L': [['     ',
-                               '   x ',
-                               ' xxx ',
-                               '     ',
-                               '     '],
-                              ['     ',
-                               '  x  ',
-                               '  x  ',
-                               '  xx ',
-                               '     '],
-                              ['     ',
-                               '     ',
-                               ' xxx ',
-                               ' x   ',
-                               '     '],
-                              ['     ',
-                               ' xx  ',
-                               '  x  ',
-                               '  x  ',
-                               '     ']],
-                        'I': [['     ',
-                               '  x  ',
-                               '  x  ',
-                               '  x  ',
-                               '  x  '],
-                              ['     ',
-                               '     ',
-                               'xxxx ',
-                               '     ',
-                               '     ']],
-                        'O': [['     ',
-                               '     ',
-                               ' xx  ',
-                               ' xx  ',
-                               '     ']],
-                        'T': [['     ',
-                               '  x  ',
-                               ' xxx ',
-                               '     ',
-                               '     '],
-                              ['     ',
-                               '  x  ',
-                               '  xx ',
-                               '  x  ',
-                               '     '],
-                              ['     ',
-                               '     ',
-                               ' xxx ',
-                               '  x  ',
-                               '     '],
-                              ['     ',
-                               '  x  ',
-                               ' xx  ',
-                               '  x  ',
-                               '     ']]}
 
         self.pygame_init()
 
@@ -319,26 +366,15 @@ class Tetris:
         rect.y = 0
         self.screen.blit(text, rect)
 
-    def get_figure(self):
-        shape = random.choice(list(self.figures.keys()))
-        rotation = random.choice(self.figures[shape])
-        color = random.choice(self.colors)
-        res = {'shape': shape,
-               'fig': rotation,
-               'color': color,
-               'x': 3,
-               'y': -1}
-        return res
+    @staticmethod
+    def get_figure():
+        return Figure.generate_figure()
 
     def check_pos(self, cup, fig, deltax=0, deltay=0):
-        fig_coor = []
-        for i in range(5):
-            for j in range(5):
-                if fig['fig'][i][j] == 'x':
-                    fig_coor.append([j, i])
+        fig_coor = fig.get_fig_coor
         for i in range(len(fig_coor)):
-            fig_coor[i][0] += fig['x'] + deltax
-            fig_coor[i][1] += fig['y'] + deltay
+            fig_coor[i][0] += deltax
+            fig_coor[i][1] += deltay
         for x, y in fig_coor:
             if x < 0 or x > self.CUP_WIDTH - 1:
                 return False
@@ -349,10 +385,8 @@ class Tetris:
         return True
 
     def add_fig(self, cup, fig):
-        for i in range(5):
-            for j in range(5):
-                if fig['fig'][j][i] != ' ':
-                    cup[fig['x'] + i][fig['y'] + j] = self.colors.index(fig['color'])
+        for x, y in fig.get_fig_coor:
+            cup[x][y] = fig.color
         c = 0
         for y in range(0, 20):
             for x in range(10):
@@ -374,13 +408,11 @@ class Tetris:
         self.lines += c
 
     def draw_fig(self, fig):
-        for x in range(5):
-            for y in range(5):
-                if fig['fig'][y][x] != ' ':
-                    pygame.draw.rect(self.screen, fig['color'],
-                                     (self.CUP_X + self.BLOCK * (fig['x'] + x) + 1,
-                                      self.CUP_Y + self.BLOCK * (fig['y'] + y) + 1,
-                                      self.BLOCK - 2, self.BLOCK - 2))
+        for x, y in fig.get_fig_coor:
+            pygame.draw.rect(self.screen, fig.get_color,
+                             (self.CUP_X + self.BLOCK * x + 1,
+                              self.CUP_Y + self.BLOCK * y + 1,
+                              self.BLOCK - 2, self.BLOCK - 2))
 
     @staticmethod
     def get_speed(level):
@@ -402,8 +434,8 @@ class Tetris:
                           self.BLOCK * 5, self.BLOCK * 5), 1)
         for x in range(5):
             for y in range(5):
-                if fig['fig'][y][x] != ' ':
-                    pygame.draw.rect(self.screen, fig['color'],
+                if fig[y, x]:
+                    pygame.draw.rect(self.screen, fig.get_color,
                                      (440 + self.BLOCK * x + 1,
                                       150 + self.BLOCK * y + 1,
                                       self.BLOCK - 2, self.BLOCK - 2))
@@ -509,21 +541,18 @@ class Tetris:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         if self.check_pos(cup, fig, -1):
-                            fig['x'] -= 1
+                            fig.x -= 1
                     elif event.key == pygame.K_RIGHT:
                         if self.check_pos(cup, fig, 1):
-                            fig['x'] += 1
+                            fig.x += 1
                     elif event.key == pygame.K_UP:
-                        rotations = self.figures[fig['shape']]
-                        rotation = (rotations.index(fig['fig']) + 1) % len(rotations)
-                        fig['fig'] = rotations[rotation]
+                        fig.next_rotation()
                         if not self.check_pos(cup, fig):
-                            rotation = (rotations.index(fig['fig']) - 1) % len(rotations)
-                            fig['fig'] = rotations[rotation]
+                            fig.previous_rotation()
                     elif event.key == pygame.K_RETURN:
                         for i in range(1, 20):
                             if not self.check_pos(cup, fig, deltay=i):
-                                fig['y'] += i - 1
+                                fig.y += i - 1
                                 break
                     elif event.key == pygame.K_SPACE:
                         ans = self.pause()
@@ -533,7 +562,7 @@ class Tetris:
                             self.exit()
             if time.time() - last_fall > speed:
                 if self.check_pos(cup, fig, 0, 1):
-                    fig['y'] += 1
+                    fig.y += 1
                     last_fall = time.time()
                 else:
                     self.add_fig(cup, fig)
