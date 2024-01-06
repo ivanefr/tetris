@@ -182,12 +182,17 @@ class Tetris:
         sys.exit()
 
     @staticmethod
-    def wait_press(arr):
+    def wait_press(button_arr=None, k_arr=None):
         Tetris.check_exit()
 
         for event in pygame.event.get():
+            if k_arr is not None:
+                if event.type == pygame.KEYDOWN:
+                    print(event.key)
+                    if event.key in k_arr:
+                        return event.key
             if event.type == pygame.MOUSEBUTTONDOWN:
-                for button in arr:
+                for button in button_arr:
                     x, y = pygame.mouse.get_pos()
                     if button.is_clicked(x, y):
                         return button
@@ -450,9 +455,37 @@ class Tetris:
         self.screen.blit(score_text, score_rect)
         self.screen.blit(lines_text, lines_rect)
 
-
     def pause(self):
-        ...
+        pause = pygame.Surface((600, 500), pygame.SRCALPHA)
+        pause.fill((0, 0, 0, 127))
+        self.screen.blit(pause, (0, 0))
+        # self.screen.fill(self.BLACK)
+        self.draw_title()
+
+        font = pygame.font.SysFont('timesnewroman', 40)
+        button_continue = Button(int(self.WIDTH / 2) - 110, 150,
+                                 220, 50, 'Продолжить',
+                                 self.WHITE, self.WHITE, font)
+
+        button_menu = Button(int(self.WIDTH / 2) - 110, 210,
+                             220, 50, 'Меню',
+                             self.WHITE, self.WHITE, font)
+
+        button_exit = Button(int(self.WIDTH / 2) - 110, 270,
+                             220, 50, 'Выйти',
+                             self.WHITE, self.WHITE, font)
+        buttons_arr = [button_continue, button_menu, button_exit]
+        for button in buttons_arr:
+            button.draw(self.screen)
+
+        btn = Tetris.wait_press(buttons_arr, k_arr=[pygame.K_SPACE])
+
+        while btn is None:
+            pygame.display.update()
+            self.clock.tick()
+            btn = Tetris.wait_press(buttons_arr, k_arr=[pygame.K_SPACE])
+        d = {'Продолжить': 1, 'Меню': 2, "Выйти": 3, str(pygame.K_SPACE): 1}
+        return d[str(btn)]
 
     def run(self, level):
         self.screen.fill(self.BLACK)
@@ -493,7 +526,11 @@ class Tetris:
                                 fig['y'] += i - 1
                                 break
                     elif event.key == pygame.K_SPACE:
-                        self.pause()
+                        ans = self.pause()
+                        if ans == 2:
+                            self.play()
+                        elif ans == 3:
+                            self.exit()
             if time.time() - last_fall > speed:
                 if self.check_pos(cup, fig, 0, 1):
                     fig['y'] += 1
