@@ -119,11 +119,11 @@ class Tetris:
                                '  x  ',
                                '  x  ',
                                '     ']],
-                        'I': [['  x  ',
+                        'I': [['     ',
                                '  x  ',
                                '  x  ',
                                '  x  ',
-                               '     '],
+                               '  x  '],
                               ['     ',
                                '     ',
                                'xxxx ',
@@ -194,6 +194,7 @@ class Tetris:
         return None
 
     def start_window(self):
+        self.screen.fill(self.BLACK)
         self.draw_title()
 
         font = pygame.font.SysFont('timesnewroman', 40)
@@ -227,12 +228,83 @@ class Tetris:
             pygame.display.update()
             self.clock.tick()
             btn = Tetris.wait_press(buttons_arr)
-        return btn
+        d = {'Лёгкий': 1, "Нормальный": 2, "Сложный": 3}
+        return d[str(btn)]
 
-    def play(self):
-        while True:
+    @staticmethod
+    def get_record(level):
+        with open('records.txt') as f:
+            text = f.read()
+        return int(text.strip().split(',')[level - 1])
+
+    @staticmethod
+    def set_record(level, record):
+        with open('records.txt') as f:
+            text = f.read()
+        text = text.strip().split(',')
+        text[level - 1] = str(record)
+        with open('records.txt', mode='w') as f:
+            f.write(','.join(text))
+
+    def end_window(self, level):
+        self.screen.fill(self.BLACK)
+        self.draw_title()
+
+        if self.score > Tetris.get_record(level):
+            text = "Вы побили свой рекорд!"
+            Tetris.set_record(level, self.score)
+        else:
+            text = "Вы проиграли."
+
+        font = pygame.font.SysFont('timesnewroman', 40)
+        text1 = font.render(text, True, self.WHITE)
+        rect1 = text1.get_rect()
+        rect1.centerx = int(self.WIDTH / 2)
+        rect1.y = 50
+
+        text2 = font.render(f'Счёт: {self.score}', True, self.WHITE)
+        rect2 = text2.get_rect()
+        rect2.centerx = int(self.WIDTH / 2)
+        rect2.y = 100
+
+        self.screen.blit(text1, rect1)
+        self.screen.blit(text2, rect2)
+
+        button_repeat = Button(int(self.WIDTH / 2) - 110, 150,
+                               220, 50, 'Повторить',
+                               self.WHITE, self.WHITE, font)
+        button_menu = Button(int(self.WIDTH / 2) - 110, 210,
+                             220, 50, 'Меню',
+                             self.WHITE, self.WHITE, font)
+        button_exit = Button(int(self.WIDTH / 2) - 110, 270,
+                             220, 50, 'Выйти',
+                             self.WHITE, self.WHITE, font)
+
+        buttons_arr = [button_repeat, button_menu, button_exit]
+
+        for btn in buttons_arr:
+            btn.draw(self.screen)
+
+        btn = Tetris.wait_press(buttons_arr)
+
+        while btn is None:
+            pygame.display.update()
+            self.clock.tick()
+            btn = Tetris.wait_press(buttons_arr)
+        d = {'Повторить': 1, "Меню": 2, "Выйти": 3}
+        return d[str(btn)]
+
+    def play(self, level=None):
+        if level is None:
             level = self.start_window()
-            self.run(level)
+        self.run(level)
+        ans = self.end_window(level)
+        if ans == 3:
+            Tetris.exit()
+        if ans == 2:
+            self.play()
+        elif ans == 1:
+            self.play(level)
 
     def draw_title(self):
         font = pygame.font.SysFont('timesnewroman', 40)
@@ -250,7 +322,7 @@ class Tetris:
                'fig': rotation,
                'color': color,
                'x': 3,
-               'y': 0}
+               'y': -1}
         return res
 
     def check_pos(self, cup, fig, deltax=0, deltay=0):
@@ -276,6 +348,25 @@ class Tetris:
             for j in range(5):
                 if fig['fig'][j][i] != ' ':
                     cup[fig['x'] + i][fig['y'] + j] = self.colors.index(fig['color'])
+        c = 0
+        for y in range(0, 20):
+            for x in range(10):
+                if cup[x][y] == ' ':
+                    break
+            else:
+                for x in range(10):
+                    cup[x].pop(y)
+                    cup[x].insert(0, ' ')
+                c += 1
+        if c == 1:
+            self.score += 100
+        elif c == 2:
+            self.score += 200
+        elif c == 3:
+            self.score += 700
+        elif c == 4:
+            self.score += 1500
+        self.lines += c
 
     def draw_fig(self, fig):
         for x in range(5):
@@ -286,17 +377,99 @@ class Tetris:
                                       self.CUP_Y + self.BLOCK * (fig['y'] + y) + 1,
                                       self.BLOCK - 2, self.BLOCK - 2))
 
+    @staticmethod
+    def get_speed(level):
+        if level == 1:
+            return 0.4
+        if level == 2:
+            return 0.25
+        return 0.15
+
+    def draw_next_fig(self, fig):
+        font = pygame.font.SysFont('arial', 30)
+        text = font.render('Next shape:', True, self.WHITE)
+        rect = text.get_rect()
+        rect.x = 425
+        rect.y = 100
+        self.screen.blit(text, rect)
+        pygame.draw.rect(self.screen, self.WHITE,
+                         (440, 150,
+                          self.BLOCK * 5, self.BLOCK * 5), 1)
+        for x in range(5):
+            for y in range(5):
+                if fig['fig'][y][x] != ' ':
+                    pygame.draw.rect(self.screen, fig['color'],
+                                     (440 + self.BLOCK * x + 1,
+                                      150 + self.BLOCK * y + 1,
+                                      self.BLOCK - 2, self.BLOCK - 2))
+
+    def draw_info(self):
+        font = pygame.font.SysFont('arial', 20)
+
+        text1 = font.render("esc - exit", True, self.WHITE)
+        rect1 = text1.get_rect()
+        rect1.x = 20
+        rect1.y = 50
+
+        text2 = font.render("space - pause", True, self.WHITE)
+        rect2 = text2.get_rect()
+        rect2.x = 20
+        rect2.y = 100
+
+        self.screen.blit(text1, rect1)
+        self.screen.blit(text2, rect2)
+
+    def draw_stat(self, level):
+        font_stat = pygame.font.SysFont('arial', 40, bold=True)
+        stat = font_stat.render('Statistic:', True, self.WHITE)
+        stat_rect = stat.get_rect()
+        stat_rect.centerx = 100
+        stat_rect.y = 200
+
+        self.screen.blit(stat, stat_rect)
+        pygame.draw.rect(self.screen, self.WHITE,
+                         (10, 250, 170, 200), 1)
+
+        font = pygame.font.SysFont('timesnewroman', 20, italic=True)
+        lines_text = font.render(f"Lines: {self.lines}", True, self.WHITE)
+        lines_rect = lines_text.get_rect()
+        lines_rect.x = 15
+        lines_rect.y = 260
+
+        score_text = font.render(f"Score: {self.score}", True, self.WHITE)
+        score_rect = score_text.get_rect()
+        score_rect.x = 15
+        score_rect.y = 300
+
+        record_text = font.render(f"Record: {self.get_record(level)}", True, self.WHITE)
+        record_rect = record_text.get_rect()
+        record_rect.x = 15
+        record_rect.y = 340
+
+        self.screen.blit(record_text, record_rect)
+        self.screen.blit(score_text, score_rect)
+        self.screen.blit(lines_text, lines_rect)
+
+
+    def pause(self):
+        ...
+
     def run(self, level):
         self.screen.fill(self.BLACK)
         cup = self.new_cup()
 
+        self.score = 0
+        self.lines = 0
+
         self.draw_title()
         self.draw_cup(cup)
+        self.draw_stat(level)
 
         fig = self.get_figure()
         next_fig = self.get_figure()
 
         last_fall = time.time()
+        speed = self.get_speed(level)
         while True:
             self.check_exit()
             for event in pygame.event.get():
@@ -314,7 +487,14 @@ class Tetris:
                         if not self.check_pos(cup, fig):
                             rotation = (rotations.index(fig['fig']) - 1) % len(rotations)
                             fig['fig'] = rotations[rotation]
-            if time.time() - last_fall > 0.5:
+                    elif event.key == pygame.K_RETURN:
+                        for i in range(1, 20):
+                            if not self.check_pos(cup, fig, deltay=i):
+                                fig['y'] += i - 1
+                                break
+                    elif event.key == pygame.K_SPACE:
+                        self.pause()
+            if time.time() - last_fall > speed:
                 if self.check_pos(cup, fig, 0, 1):
                     fig['y'] += 1
                     last_fall = time.time()
@@ -327,8 +507,11 @@ class Tetris:
 
             self.screen.fill(self.BLACK)
             self.draw_title()
+            self.draw_stat(level)
+            self.draw_info()
             self.draw_cup(cup)
             self.draw_fig(fig)
+            self.draw_next_fig(next_fig)
             pygame.display.update()
             self.clock.tick()
 
