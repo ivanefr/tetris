@@ -181,6 +181,31 @@ class Figure:
         self.rotation = (self.rotation - 1) % len(Figure.figures[self.shape])
         self.fig = Figure.figures[self.shape][self.rotation]
 
+    def draw_fig(self, screen, cup_x, cup_y, block):
+        for x, y in self.get_fig_coor:
+            pygame.draw.rect(screen, self.get_color,
+                             (cup_x + block * x + 1,
+                              cup_y + block * y + 1,
+                              block - 2, block - 2))
+
+    def draw_next_fig(self, screen, block):
+        font = pygame.font.SysFont('arial', 30)
+        text = font.render('Next shape:', True, WHITE)
+        rect = text.get_rect()
+        rect.x = 425
+        rect.y = 100
+        screen.blit(text, rect)
+        pygame.draw.rect(screen, WHITE,
+                         (440, 150,
+                          block * 5, block * 5), 1)
+        for x in range(5):
+            for y in range(5):
+                if self[y, x]:
+                    pygame.draw.rect(screen, self.get_color,
+                                     (440 + block * x + 1,
+                                      150 + block * y + 1,
+                                      block - 2, block - 2))
+
 
 class Cup:
     def __init__(self, cup_x, cup_y, block, cup_width, cup_height):
@@ -340,6 +365,8 @@ class Tetris:
         rect.y = 100
         self.screen.blit(text, rect)
 
+        font_statistic = pygame.font.SysFont('arial', 20, italic=True)
+
         button_lvl_1 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3),
                               280, 50, "Лёгкий",
@@ -356,13 +383,14 @@ class Tetris:
                               int(self.HEIGHT / 3) + 200,
                               280, 50, "Экстремальный",
                               WHITE, PURPLE, font)
+        button_statistic = Button(self.WIDTH - 130, 5, 120, 30,
+                                  "Статистика", WHITE, WHITE,
+                                  font_statistic)
 
-        buttons_arr = [button_lvl_1, button_lvl_2, button_lvl_3, button_lvl_4]
+        buttons_arr = [button_lvl_1, button_lvl_2, button_lvl_3, button_lvl_4, button_statistic]
 
-        button_lvl_1.draw(screen=self.screen)
-        button_lvl_2.draw(screen=self.screen)
-        button_lvl_3.draw(screen=self.screen)
-        button_lvl_4.draw(screen=self.screen)
+        for button in buttons_arr:
+            button.draw(screen=self.screen)
 
         btn = Tetris.wait_press(buttons_arr)
 
@@ -370,7 +398,7 @@ class Tetris:
             pygame.display.update()
             self.clock.tick()
             btn = Tetris.wait_press(buttons_arr)
-        d = {'Лёгкий': 1, "Нормальный": 2, "Сложный": 3, "Экстремальный": 4}
+        d = {'Лёгкий': 1, "Нормальный": 2, "Сложный": 3, "Экстремальный": 4, "Статистика": 5}
         return d[str(btn)]
 
     @staticmethod
@@ -391,6 +419,7 @@ class Tetris:
     def end_window(self, level):
         self.screen.fill(BLACK)
         self.draw_title()
+        self.update_statistic(self.count_figures)
 
         if self.cup.score > Tetris.get_record(level):
             text = "Вы побили свой рекорд!"
@@ -436,9 +465,58 @@ class Tetris:
         d = {'Повторить': 1, "Меню": 2, "Выйти": 3}
         return d[str(btn)]
 
+    @property
+    def get_count_games(self):
+        with open("statistic.txt") as f:
+            text = f.read().strip()
+        count, _ = text.split(',')
+        return int(count)
+
+    @property
+    def get_count_figures(self):
+        with open("statistic.txt") as f:
+            text = f.read().strip()
+        _, count = text.split(',')
+        return int(count)
+
+    def statistic_window(self):
+        self.screen.fill(BLACK)
+        self.draw_title()
+
+        small_font = pygame.font.SysFont('arial', 20)
+        play_text = small_font.render(f"Игр сыгранно: {self.get_count_games}", True, WHITE)
+        fig_text = small_font.render(f"Фигур упало: {self.get_count_figures}", True, WHITE)
+
+        font_exit = pygame.font.SysFont('arial', 30)
+
+        play_rect = play_text.get_rect()
+        play_rect.x = 50
+        play_rect.y = 100
+
+        fig_rect = fig_text.get_rect()
+        fig_rect.x = 50
+        fig_rect.y = 120
+
+        self.screen.blit(play_text, play_rect)
+        self.screen.blit(fig_text, fig_rect)
+
+        button_exit = Button(5, 5, 40, 40, "<-", WHITE, WHITE, font_exit)
+        button_exit.draw(self.screen)
+
+        btn = Tetris.wait_press([button_exit])
+
+        while btn is None:
+            pygame.display.update()
+            self.clock.tick()
+            btn = Tetris.wait_press([button_exit])
+        self.play()
+
     def play(self, level=None):
         if level is None:
             level = self.start_window()
+        if level == 5:
+            self.statistic_window()
+            return
         self.run(level)
         ans = self.end_window(level)
         if ans == 3:
@@ -460,27 +538,6 @@ class Tetris:
     def get_figure():
         return Figure.generate_figure()
 
-    def check_pos(self, cup: Cup, fig, deltax=0, deltay=0):
-        fig_coor = fig.get_fig_coor
-        for i in range(len(fig_coor)):
-            fig_coor[i][0] += deltax
-            fig_coor[i][1] += deltay
-        for x, y in fig_coor:
-            if x < 0 or x > self.CUP_WIDTH - 1:
-                return False
-            if y < 0 or y > self.CUP_HEIGHT - 1:
-                return False
-            if cup[x, y] != ' ':
-                return False
-        return True
-
-    def draw_fig(self, fig):
-        for x, y in fig.get_fig_coor:
-            pygame.draw.rect(self.screen, fig.get_color,
-                             (self.CUP_X + self.BLOCK * x + 1,
-                              self.CUP_Y + self.BLOCK * y + 1,
-                              self.BLOCK - 2, self.BLOCK - 2))
-
     @staticmethod
     def get_speed(level):
         if level == 1:
@@ -490,24 +547,6 @@ class Tetris:
         if level == 3:
             return 0.15
         return 0.08
-
-    def draw_next_fig(self, fig):
-        font = pygame.font.SysFont('arial', 30)
-        text = font.render('Next shape:', True, WHITE)
-        rect = text.get_rect()
-        rect.x = 425
-        rect.y = 100
-        self.screen.blit(text, rect)
-        pygame.draw.rect(self.screen, WHITE,
-                         (440, 150,
-                          self.BLOCK * 5, self.BLOCK * 5), 1)
-        for x in range(5):
-            for y in range(5):
-                if fig[y, x]:
-                    pygame.draw.rect(self.screen, fig.get_color,
-                                     (440 + self.BLOCK * x + 1,
-                                      150 + self.BLOCK * y + 1,
-                                      self.BLOCK - 2, self.BLOCK - 2))
 
     def draw_info(self):
         font = pygame.font.SysFont('arial', 20)
@@ -588,12 +627,27 @@ class Tetris:
         d = {'Продолжить': 1, 'Меню': 2, "Выйти": 3, str(pygame.K_SPACE): 1}
         return d[str(btn)]
 
+    @staticmethod
+    def update_statistic(count_figures):
+        with open("statistic.txt") as f:
+            text = f.read().strip().split(',')
+        c_games, c_figures = text
+        c_games = int(c_games)
+        c_figures = int(c_figures)
+        c_games += 1
+        c_figures += count_figures
+
+        with open("statistic.txt", mode='w') as f:
+            f.write(','.join([str(c_games), str(c_figures)]))
+
     def run(self, level):
         self.screen.fill(BLACK)
 
         self.draw_title()
         self.cup.draw(self.screen, WHITE)
         self.draw_stat(level)
+
+        self.count_figures = 0
 
         self.cup.clear()
 
@@ -632,6 +686,7 @@ class Tetris:
                     fig.y += 1
                     last_fall = time.time()
                 else:
+                    self.count_figures += 1
                     self.cup.add_fig(fig)
                     fig = next_fig
                     next_fig = self.get_figure()
@@ -643,8 +698,8 @@ class Tetris:
             self.draw_stat(level)
             self.draw_info()
             self.cup.draw(self.screen, WHITE)
-            self.draw_fig(fig)
-            self.draw_next_fig(next_fig)
+            fig.draw_fig(self.screen, self.CUP_X, self.CUP_Y, self.BLOCK)
+            next_fig.draw_next_fig(self.screen, self.BLOCK)
             pygame.display.update()
             self.clock.tick()
 
