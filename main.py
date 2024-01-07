@@ -3,6 +3,15 @@ import random
 import time
 import pygame
 
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+PURPLE = (146, 110, 174)
+colors = [GREEN, BLUE, RED, YELLOW, PURPLE]
+
 
 class Button:
     def __init__(self, x, y, width, height, text, color_button, color_font, font):
@@ -129,11 +138,6 @@ class Figure:
                       ' xx  ',
                       '  x  ',
                       '     ']]}
-    GREEN = (0, 255, 0)
-    BLUE = (0, 0, 255)
-    RED = (255, 0, 0)
-    YELLOW = (255, 255, 0)
-    colors = [GREEN, BLUE, RED, YELLOW]
 
     def __init__(self, shape: str, rotation: int, color: int):
         self.shape = shape
@@ -157,7 +161,7 @@ class Figure:
 
     @property
     def get_color(self):
-        return Figure.colors[self.color]
+        return colors[self.color]
 
     def __getitem__(self, index):
         return self.fig[index[0]][index[1]] == 'x'
@@ -166,7 +170,7 @@ class Figure:
     def generate_figure(cls):
         shape = random.choice(list(cls.figures.keys()))
         rotation = random.randint(0, len(cls.figures[shape]) - 1)
-        color = random.randint(0, len(cls.colors) - 1)
+        color = random.randint(0, len(colors) - 1)
         return cls(shape, rotation, color)
 
     def next_rotation(self):
@@ -176,6 +180,96 @@ class Figure:
     def previous_rotation(self):
         self.rotation = (self.rotation - 1) % len(Figure.figures[self.shape])
         self.fig = Figure.figures[self.shape][self.rotation]
+
+
+class Cup:
+    def __init__(self, cup_x, cup_y, block, cup_width, cup_height):
+        self.cup_width = cup_width
+        self.cup_height = cup_height
+
+        self.cup_x = cup_x
+        self.cup_y = cup_y
+
+        self.block = block
+
+        self.lines = 0
+        self.score = 0
+
+        self.cup = self.get_new_cup_list()
+
+    def get_new_cup_list(self):
+        cup = []
+        for i in range(self.cup_width):
+            cup.append([' ' for _ in range(self.cup_height)])
+        return cup
+
+    def __getitem__(self, index):
+        if isinstance(index, tuple):
+            x, y = index
+            return self.cup[x][y]
+        else:
+            return self.cup[index]
+
+    def __setitem__(self, key, value):
+        x, y = key
+        self.cup[x][y] = value
+
+    def draw(self, screen, color):
+        pygame.draw.rect(screen, color,
+                         (self.cup_x, self.cup_y,
+                          self.cup_width * self.block,
+                          self.cup_height * self.block,
+                          ), 1)
+
+        for x in range(self.cup_width):
+            for y in range(self.cup_height):
+                if self[x, y] != ' ':
+                    pygame.draw.rect(screen, colors[int(self[x, y])],
+                                     (self.cup_x + self.block * x + 1,
+                                      self.cup_y + self.block * y + 1,
+                                      self.block - 2, self.block - 2))
+
+    def add_fig(self, fig):
+        for x, y in fig.get_fig_coor:
+            self[x, y] = fig.color
+        c = 0
+        for y in range(0, 20):
+            for x in range(10):
+                if self[x, y] == ' ':
+                    break
+            else:
+                for x in range(10):
+                    self[x].pop(y)
+                    self[x].insert(0, ' ')
+                c += 1
+        if c == 1:
+            self.score += 100
+        elif c == 2:
+            self.score += 200
+        elif c == 3:
+            self.score += 700
+        elif c == 4:
+            self.score += 1500
+        self.lines += c
+
+    def check_pos(self, fig, deltax=0, deltay=0):
+        fig_coor = fig.get_fig_coor
+        for i in range(len(fig_coor)):
+            fig_coor[i][0] += deltax
+            fig_coor[i][1] += deltay
+        for x, y in fig_coor:
+            if x < 0 or x > self.cup_width - 1:
+                return False
+            if y < 0 or y > self.cup_height - 1:
+                return False
+            if self[x, y] != ' ':
+                return False
+        return True
+
+    def clear(self):
+        self.score = 0
+        self.lines = 0
+        self.cup = self.get_new_cup_list()
 
 
 class Tetris:
@@ -193,17 +287,12 @@ class Tetris:
         self.CUP_X = self.WIDTH // 2 - (self.CUP_WIDTH // 2) * self.BLOCK
         self.CUP_Y = 50
 
-        self.BLACK = (0, 0, 0)
-        self.WHITE = (255, 255, 255)
-        self.GREEN = (0, 255, 0)
-        self.BLUE = (0, 0, 255)
-        self.RED = (255, 0, 0)
-        self.YELLOW = (255, 255, 0)
-        self.PURPLE = (146, 110, 174)
+        self.cup = Cup(self.CUP_X, self.CUP_Y, self.BLOCK, self.CUP_WIDTH, self.CUP_HEIGHT)
 
-        self.colors = [self.GREEN, self.BLUE, self.RED, self.YELLOW, self.PURPLE]
-
-        self.pygame_init()
+        pygame.init()
+        pygame.display.set_caption("Tetris")
+        self.screen = pygame.display.set_mode(self.size)
+        self.clock = pygame.time.Clock()
 
     @staticmethod
     def check_exit():
@@ -217,12 +306,6 @@ class Tetris:
             if event.type == pygame.QUIT:
                 Tetris.exit()
             pygame.event.post(event)
-
-    def pygame_init(self):
-        pygame.init()
-        pygame.display.set_caption("Tetris")
-        self.screen = pygame.display.set_mode(self.size)
-        self.clock = pygame.time.Clock()
 
     @staticmethod
     def exit():
@@ -247,11 +330,11 @@ class Tetris:
         return None
 
     def start_window(self):
-        self.screen.fill(self.BLACK)
+        self.screen.fill(BLACK)
         self.draw_title()
 
         font = pygame.font.SysFont('timesnewroman', 40)
-        text = font.render("Выберите уровень сложности:", True, self.WHITE)
+        text = font.render("Выберите уровень сложности:", True, WHITE)
         rect = text.get_rect()
         rect.centerx = int(self.WIDTH / 2)
         rect.y = 100
@@ -260,19 +343,19 @@ class Tetris:
         button_lvl_1 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3),
                               280, 50, "Лёгкий",
-                              self.WHITE, self.GREEN, font)
+                              WHITE, GREEN, font)
         button_lvl_2 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3) + 60,
                               280, 50, "Нормальный",
-                              self.WHITE, self.YELLOW, font)
+                              WHITE, YELLOW, font)
         button_lvl_3 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3) + 120,
                               280, 50, "Сложный",
-                              self.WHITE, self.RED, font)
+                              WHITE, RED, font)
         button_lvl_4 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3) + 200,
                               280, 50, "Экстремальный",
-                              self.WHITE, self.PURPLE, font)
+                              WHITE, PURPLE, font)
 
         buttons_arr = [button_lvl_1, button_lvl_2, button_lvl_3, button_lvl_4]
 
@@ -306,22 +389,22 @@ class Tetris:
             f.write(','.join(text))
 
     def end_window(self, level):
-        self.screen.fill(self.BLACK)
+        self.screen.fill(BLACK)
         self.draw_title()
 
-        if self.score > Tetris.get_record(level):
+        if self.cup.score > Tetris.get_record(level):
             text = "Вы побили свой рекорд!"
-            Tetris.set_record(level, self.score)
+            Tetris.set_record(level, self.cup.score)
         else:
             text = "Вы проиграли."
 
         font = pygame.font.SysFont('timesnewroman', 40)
-        text1 = font.render(text, True, self.WHITE)
+        text1 = font.render(text, True, WHITE)
         rect1 = text1.get_rect()
         rect1.centerx = int(self.WIDTH / 2)
         rect1.y = 50
 
-        text2 = font.render(f'Счёт: {self.score}', True, self.WHITE)
+        text2 = font.render(f'Счёт: {self.cup.score}', True, WHITE)
         rect2 = text2.get_rect()
         rect2.centerx = int(self.WIDTH / 2)
         rect2.y = 100
@@ -331,13 +414,13 @@ class Tetris:
 
         button_repeat = Button(int(self.WIDTH / 2) - 110, 150,
                                220, 50, 'Повторить',
-                               self.WHITE, self.WHITE, font)
+                               WHITE, WHITE, font)
         button_menu = Button(int(self.WIDTH / 2) - 110, 210,
                              220, 50, 'Меню',
-                             self.WHITE, self.WHITE, font)
+                             WHITE, WHITE, font)
         button_exit = Button(int(self.WIDTH / 2) - 110, 270,
                              220, 50, 'Выйти',
-                             self.WHITE, self.WHITE, font)
+                             WHITE, WHITE, font)
 
         buttons_arr = [button_repeat, button_menu, button_exit]
 
@@ -367,7 +450,7 @@ class Tetris:
 
     def draw_title(self):
         font = pygame.font.SysFont('timesnewroman', 40)
-        text = font.render("Tetris", True, self.WHITE)
+        text = font.render("Tetris", True, WHITE)
         rect = text.get_rect()
         rect.centerx = int(self.WIDTH / 2)
         rect.y = 0
@@ -377,7 +460,7 @@ class Tetris:
     def get_figure():
         return Figure.generate_figure()
 
-    def check_pos(self, cup, fig, deltax=0, deltay=0):
+    def check_pos(self, cup: Cup, fig, deltax=0, deltay=0):
         fig_coor = fig.get_fig_coor
         for i in range(len(fig_coor)):
             fig_coor[i][0] += deltax
@@ -387,32 +470,9 @@ class Tetris:
                 return False
             if y < 0 or y > self.CUP_HEIGHT - 1:
                 return False
-            if cup[x][y] != ' ':
+            if cup[x, y] != ' ':
                 return False
         return True
-
-    def add_fig(self, cup, fig):
-        for x, y in fig.get_fig_coor:
-            cup[x][y] = fig.color
-        c = 0
-        for y in range(0, 20):
-            for x in range(10):
-                if cup[x][y] == ' ':
-                    break
-            else:
-                for x in range(10):
-                    cup[x].pop(y)
-                    cup[x].insert(0, ' ')
-                c += 1
-        if c == 1:
-            self.score += 100
-        elif c == 2:
-            self.score += 200
-        elif c == 3:
-            self.score += 700
-        elif c == 4:
-            self.score += 1500
-        self.lines += c
 
     def draw_fig(self, fig):
         for x, y in fig.get_fig_coor:
@@ -433,12 +493,12 @@ class Tetris:
 
     def draw_next_fig(self, fig):
         font = pygame.font.SysFont('arial', 30)
-        text = font.render('Next shape:', True, self.WHITE)
+        text = font.render('Next shape:', True, WHITE)
         rect = text.get_rect()
         rect.x = 425
         rect.y = 100
         self.screen.blit(text, rect)
-        pygame.draw.rect(self.screen, self.WHITE,
+        pygame.draw.rect(self.screen, WHITE,
                          (440, 150,
                           self.BLOCK * 5, self.BLOCK * 5), 1)
         for x in range(5):
@@ -452,12 +512,12 @@ class Tetris:
     def draw_info(self):
         font = pygame.font.SysFont('arial', 20)
 
-        text1 = font.render("esc - exit", True, self.WHITE)
+        text1 = font.render("esc - exit", True, WHITE)
         rect1 = text1.get_rect()
         rect1.x = 20
         rect1.y = 50
 
-        text2 = font.render("space - pause", True, self.WHITE)
+        text2 = font.render("space - pause", True, WHITE)
         rect2 = text2.get_rect()
         rect2.x = 20
         rect2.y = 100
@@ -467,27 +527,27 @@ class Tetris:
 
     def draw_stat(self, level):
         font_stat = pygame.font.SysFont('arial', 40, bold=True)
-        stat = font_stat.render('Statistic:', True, self.WHITE)
+        stat = font_stat.render('Statistic:', True, WHITE)
         stat_rect = stat.get_rect()
         stat_rect.centerx = 100
         stat_rect.y = 200
 
         self.screen.blit(stat, stat_rect)
-        pygame.draw.rect(self.screen, self.WHITE,
+        pygame.draw.rect(self.screen, WHITE,
                          (10, 250, 170, 200), 1)
 
         font = pygame.font.SysFont('timesnewroman', 20, italic=True)
-        lines_text = font.render(f"Lines: {self.lines}", True, self.WHITE)
+        lines_text = font.render(f"Lines: {self.cup.lines}", True, WHITE)
         lines_rect = lines_text.get_rect()
         lines_rect.x = 15
         lines_rect.y = 260
 
-        score_text = font.render(f"Score: {self.score}", True, self.WHITE)
+        score_text = font.render(f"Score: {self.cup.score}", True, WHITE)
         score_rect = score_text.get_rect()
         score_rect.x = 15
         score_rect.y = 300
 
-        record_text = font.render(f"Record: {self.get_record(level)}", True, self.WHITE)
+        record_text = font.render(f"Record: {self.get_record(level)}", True, WHITE)
         record_rect = record_text.get_rect()
         record_rect.x = 15
         record_rect.y = 340
@@ -500,21 +560,21 @@ class Tetris:
         pause = pygame.Surface((600, 500), pygame.SRCALPHA)
         pause.fill((0, 0, 0, 127))
         self.screen.blit(pause, (0, 0))
-        # self.screen.fill(self.BLACK)
+        # self.screen.fill(BLACK)
         self.draw_title()
 
         font = pygame.font.SysFont('timesnewroman', 40)
         button_continue = Button(int(self.WIDTH / 2) - 110, 150,
                                  220, 50, 'Продолжить',
-                                 self.WHITE, self.WHITE, font)
+                                 WHITE, WHITE, font)
 
         button_menu = Button(int(self.WIDTH / 2) - 110, 210,
                              220, 50, 'Меню',
-                             self.WHITE, self.WHITE, font)
+                             WHITE, WHITE, font)
 
         button_exit = Button(int(self.WIDTH / 2) - 110, 270,
                              220, 50, 'Выйти',
-                             self.WHITE, self.WHITE, font)
+                             WHITE, WHITE, font)
         buttons_arr = [button_continue, button_menu, button_exit]
         for button in buttons_arr:
             button.draw(self.screen)
@@ -529,15 +589,13 @@ class Tetris:
         return d[str(btn)]
 
     def run(self, level):
-        self.screen.fill(self.BLACK)
-        cup = self.new_cup()
-
-        self.score = 0
-        self.lines = 0
+        self.screen.fill(BLACK)
 
         self.draw_title()
-        self.draw_cup(cup)
+        self.cup.draw(self.screen, WHITE)
         self.draw_stat(level)
+
+        self.cup.clear()
 
         fig = self.get_figure()
         next_fig = self.get_figure()
@@ -549,18 +607,18 @@ class Tetris:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
-                        if self.check_pos(cup, fig, -1):
+                        if self.cup.check_pos(fig, deltax=-1):
                             fig.x -= 1
                     elif event.key == pygame.K_RIGHT:
-                        if self.check_pos(cup, fig, 1):
+                        if self.cup.check_pos(fig, deltax=1):
                             fig.x += 1
                     elif event.key == pygame.K_UP:
                         fig.next_rotation()
-                        if not self.check_pos(cup, fig):
+                        if not self.cup.check_pos(fig):
                             fig.previous_rotation()
                     elif event.key == pygame.K_RETURN:
                         for i in range(1, 20):
-                            if not self.check_pos(cup, fig, deltay=i):
+                            if not self.cup.check_pos(fig, deltay=i):
                                 fig.y += i - 1
                                 break
                     elif event.key == pygame.K_SPACE:
@@ -570,45 +628,25 @@ class Tetris:
                         elif ans == 3:
                             self.exit()
             if time.time() - last_fall > speed:
-                if self.check_pos(cup, fig, 0, 1):
+                if self.cup.check_pos(fig, deltax=0, deltay=1):
                     fig.y += 1
                     last_fall = time.time()
                 else:
-                    self.add_fig(cup, fig)
+                    self.cup.add_fig(fig)
                     fig = next_fig
                     next_fig = self.get_figure()
-                    if not self.check_pos(cup, fig):
+                    if not self.cup.check_pos(fig):
                         return False
 
-            self.screen.fill(self.BLACK)
+            self.screen.fill(BLACK)
             self.draw_title()
             self.draw_stat(level)
             self.draw_info()
-            self.draw_cup(cup)
+            self.cup.draw(self.screen, WHITE)
             self.draw_fig(fig)
             self.draw_next_fig(next_fig)
             pygame.display.update()
             self.clock.tick()
-
-    def draw_cup(self, cup):
-        pygame.draw.rect(self.screen,
-                         self.WHITE,
-                         (self.CUP_X, self.CUP_Y,
-                          self.CUP_WIDTH * self.BLOCK,
-                          self.CUP_HEIGHT * self.BLOCK,
-                          ), 1)
-
-        for x in range(self.CUP_WIDTH):
-            for y in range(self.CUP_HEIGHT):
-                if cup[x][y] != ' ':
-                    pygame.draw.rect(self.screen, self.colors[cup[x][y]],
-                                     (self.CUP_X + self.BLOCK * x + 1,
-                                      self.CUP_Y + self.BLOCK * y + 1,
-                                      self.BLOCK - 2, self.BLOCK - 2))
-
-    def new_cup(self):
-        cup = [[' ' for i in range(self.CUP_HEIGHT)] for j in range(self.CUP_WIDTH)]
-        return cup
 
 
 if __name__ == "__main__":
