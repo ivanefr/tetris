@@ -199,8 +199,9 @@ class Tetris:
         self.BLUE = (0, 0, 255)
         self.RED = (255, 0, 0)
         self.YELLOW = (255, 255, 0)
+        self.PURPLE = (146, 110, 174)
 
-        self.colors = [self.GREEN, self.BLUE, self.RED, self.YELLOW]
+        self.colors = [self.GREEN, self.BLUE, self.RED, self.YELLOW, self.PURPLE]
 
         self.pygame_init()
 
@@ -256,23 +257,29 @@ class Tetris:
         rect.y = 100
         self.screen.blit(text, rect)
 
-        button_lvl_1 = Button(int(self.WIDTH / 2) - 110,
+        button_lvl_1 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3),
-                              220, 50, "Лёгкий",
+                              280, 50, "Лёгкий",
                               self.WHITE, self.GREEN, font)
-        button_lvl_2 = Button(int(self.WIDTH / 2) - 110,
+        button_lvl_2 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3) + 60,
-                              220, 50, "Нормальный",
+                              280, 50, "Нормальный",
                               self.WHITE, self.YELLOW, font)
-        button_lvl_3 = Button(int(self.WIDTH / 2) - 110,
+        button_lvl_3 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3) + 120,
-                              220, 50, "Сложный",
+                              280, 50, "Сложный",
                               self.WHITE, self.RED, font)
-        buttons_arr = [button_lvl_1, button_lvl_2, button_lvl_3]
+        button_lvl_4 = Button(int(self.WIDTH / 2) - 140,
+                              int(self.HEIGHT / 3) + 200,
+                              280, 50, "Экстремальный",
+                              self.WHITE, self.PURPLE, font)
+
+        buttons_arr = [button_lvl_1, button_lvl_2, button_lvl_3, button_lvl_4]
 
         button_lvl_1.draw(screen=self.screen)
         button_lvl_2.draw(screen=self.screen)
         button_lvl_3.draw(screen=self.screen)
+        button_lvl_4.draw(screen=self.screen)
 
         btn = Tetris.wait_press(buttons_arr)
 
@@ -280,7 +287,7 @@ class Tetris:
             pygame.display.update()
             self.clock.tick()
             btn = Tetris.wait_press(buttons_arr)
-        d = {'Лёгкий': 1, "Нормальный": 2, "Сложный": 3}
+        d = {'Лёгкий': 1, "Нормальный": 2, "Сложный": 3, "Экстремальный": 4}
         return d[str(btn)]
 
     @staticmethod
@@ -420,7 +427,9 @@ class Tetris:
             return 0.4
         if level == 2:
             return 0.25
-        return 0.15
+        if level == 3:
+            return 0.15
+        return 0.08
 
     def draw_next_fig(self, fig):
         font = pygame.font.SysFont('arial', 30)
