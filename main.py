@@ -483,22 +483,57 @@ class Tetris:
         self.screen.fill(BLACK)
         self.draw_title()
 
-        small_font = pygame.font.SysFont('arial', 20)
+        small_font = pygame.font.SysFont('timesnewroman', 30)
         play_text = small_font.render(f"Игр сыгранно: {self.get_count_games}", True, WHITE)
         fig_text = small_font.render(f"Фигур упало: {self.get_count_figures}", True, WHITE)
+
+        record_title_font = pygame.font.SysFont("timesnewroman", 30, bold=True)
+        record_title_text = record_title_font.render("Рекорды:", True, WHITE)
+
+        records_font = pygame.font.SysFont("timesnewroman", 35)
+
+        easy_text = records_font.render(f"Лёгкий: {self.get_record(1)}", True, WHITE)
+        easy_rect = easy_text.get_rect()
+        easy_rect.centerx = self.WIDTH // 2
+        easy_rect.y = 220
+
+        normal_text = records_font.render(f"Нормальный: {self.get_record(2)}", True, WHITE)
+        normal_rect = normal_text.get_rect()
+        normal_rect.centerx = self.WIDTH // 2
+        normal_rect.y = 260
+
+        hard_text = records_font.render(f"Сложный: {self.get_record(3)}", True, WHITE)
+        hard_rect = hard_text.get_rect()
+        hard_rect.centerx = self.WIDTH // 2
+        hard_rect.y = 300
+
+        extreme_text = records_font.render(f"Экстремальный: {self.get_record(4)}", True, WHITE)
+        extreme_rect = extreme_text.get_rect()
+        extreme_rect.centerx = self.WIDTH // 2
+        extreme_rect.y = 350
 
         font_exit = pygame.font.SysFont('arial', 30)
 
         play_rect = play_text.get_rect()
         play_rect.x = 50
-        play_rect.y = 100
+        play_rect.y = 80
 
         fig_rect = fig_text.get_rect()
         fig_rect.x = 50
         fig_rect.y = 120
 
+        record_title_rect = record_title_text.get_rect()
+        record_title_rect.x = 50
+        record_title_rect.y = 160
+
         self.screen.blit(play_text, play_rect)
         self.screen.blit(fig_text, fig_rect)
+        self.screen.blit(record_title_text, record_title_rect)
+        self.screen.blit(easy_text, easy_rect)
+        self.screen.blit(normal_text, normal_rect)
+        self.screen.blit(hard_text, hard_rect)
+        self.screen.blit(extreme_text, extreme_rect)
+        pygame.draw.rect(self.screen, WHITE, (50, 200, 500, 230), 1)
 
         button_exit = Button(5, 5, 40, 40, "<-", WHITE, WHITE, font_exit)
         button_exit.draw(self.screen)
@@ -704,6 +739,10 @@ class Tetris:
             self.clock.tick()
 
 
-if __name__ == "__main__":
+def main():
     game = Tetris()
     game.play()
+
+
+if __name__ == "__main__":
+    main()
