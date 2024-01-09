@@ -44,9 +44,9 @@ class Button:
 
 class Figure:
     figures = {'S': [['     ',
-                      '     ',
                       '  xx ',
                       ' xx  ',
+                      '     ',
                       '     '],
                      ['     ',
                       '  x  ',
@@ -54,9 +54,9 @@ class Figure:
                       '   x ',
                       '     ']],
                'Z': [['     ',
-                      '     ',
                       ' xx  ',
                       '  xx ',
+                      '     ',
                       '     '],
                      ['     ',
                       '  x  ',
@@ -74,9 +74,9 @@ class Figure:
                       '  x  ',
                       '     '],
                      ['     ',
-                      '     ',
                       ' xxx ',
                       '   x ',
+                      '     ',
                       '     '],
                      ['     ',
                       '  x  ',
@@ -94,9 +94,9 @@ class Figure:
                       '  xx ',
                       '     '],
                      ['     ',
-                      '     ',
                       ' xxx ',
-                      ' x   ',
+                      '   x ',
+                      '     ',
                       '     '],
                      ['     ',
                       ' xx  ',
@@ -109,14 +109,14 @@ class Figure:
                       '  x  ',
                       '  x  '],
                      ['     ',
-                      '     ',
                       'xxxx ',
+                      '     ',
                       '     ',
                       '     ']],
                'O': [['     ',
+                      ' xx  ',
+                      ' xx  ',
                       '     ',
-                      ' xx  ',
-                      ' xx  ',
                       '     ']],
                'T': [['     ',
                       '  x  ',
@@ -129,9 +129,9 @@ class Figure:
                       '  x  ',
                       '     '],
                      ['     ',
-                      '     ',
                       ' xxx ',
                       '  x  ',
+                      '     ',
                       '     '],
                      ['     ',
                       '  x  ',
@@ -344,7 +344,6 @@ class Tetris:
         for event in pygame.event.get():
             if k_arr is not None:
                 if event.type == pygame.KEYDOWN:
-                    print(event.key)
                     if event.key in k_arr:
                         return event.key
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -535,7 +534,7 @@ class Tetris:
         self.screen.blit(extreme_text, extreme_rect)
         pygame.draw.rect(self.screen, WHITE, (50, 200, 500, 230), 1)
 
-        button_exit = Button(5, 5, 40, 40, "<-", WHITE, WHITE, font_exit)
+        button_exit = Button(5, 5, 40, 40, "<", WHITE, WHITE, font_exit)
         button_exit.draw(self.screen)
 
         btn = Tetris.wait_press([button_exit])
@@ -691,16 +690,28 @@ class Tetris:
 
         last_fall = time.time()
         speed = self.get_speed(level)
+
+        left = False
+        right = False
+
+        hold_down_time = 0.15
+        last_click = -1
+
+        add_time = 0
         while True:
             self.check_exit()
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
+                        left = True
+                        last_click = time.time()
                         if self.cup.check_pos(fig, deltax=-1):
                             fig.x -= 1
                     elif event.key == pygame.K_RIGHT:
                         if self.cup.check_pos(fig, deltax=1):
                             fig.x += 1
+                        right = True
+                        last_click = time.time()
                     elif event.key == pygame.K_UP:
                         fig.next_rotation()
                         if not self.cup.check_pos(fig):
@@ -716,17 +727,31 @@ class Tetris:
                             self.play()
                         elif ans == 3:
                             self.exit()
-            if time.time() - last_fall > speed:
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_LEFT:
+                        left = False
+                    elif event.key == pygame.K_RIGHT:
+                        right = False
+            if time.time() - last_fall > speed and time.time() - add_time > 0.5:
                 if self.cup.check_pos(fig, deltax=0, deltay=1):
                     fig.y += 1
                     last_fall = time.time()
                 else:
                     self.count_figures += 1
                     self.cup.add_fig(fig)
+                    add_time = time.time()
                     fig = next_fig
                     next_fig = self.get_figure()
                     if not self.cup.check_pos(fig):
                         return False
+            if left and time.time() - last_click > hold_down_time:
+                if self.cup.check_pos(fig, deltax=-1):
+                    fig.x -= 1
+                last_click = time.time()
+            elif right and time.time() - last_click > hold_down_time:
+                if self.cup.check_pos(fig, deltax=1):
+                    fig.x += 1
+                last_click = time.time()
 
             self.screen.fill(BLACK)
             self.draw_title()
