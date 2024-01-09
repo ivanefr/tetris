@@ -12,9 +12,9 @@ YELLOW = (255, 255, 0)
 PURPLE = (146, 110, 174)
 colors = [GREEN, BLUE, RED, YELLOW, PURPLE]
 
-background = pygame.image.load(".jpg")      
-icon = pygame.image.load(".png")
-pygame.display.set_icon(icon)
+# background = pygame.image.load(".jpg")
+# icon = pygame.image.load(".png")
+# pygame.display.set_icon(icon)
 
 
 class Button:
@@ -766,9 +766,6 @@ class Tetris:
             next_fig.draw_next_fig(self.screen, self.BLOCK)
             pygame.display.update()
             self.clock.tick()
-
-
-
 
 
 def main():
