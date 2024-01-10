@@ -12,6 +12,7 @@ YELLOW = (255, 255, 0)
 PURPLE = (146, 110, 174)
 colors = [GREEN, BLUE, RED, YELLOW, PURPLE]
 
+
 # background = pygame.image.load(".jpg")
 # icon = pygame.image.load(".png")
 # pygame.display.set_icon(icon)
@@ -629,9 +630,17 @@ class Tetris:
         record_rect.x = 15
         record_rect.y = 340
 
+        levels = ["Easy", "Normal", "Hard", "Extreme"]
+
+        lvl_text = font.render(f"Level: {levels[level - 1]}", True, WHITE)
+        lvl_rect = lvl_text.get_rect()
+        lvl_rect.x = 15
+        lvl_rect.y = 380
+
         self.screen.blit(record_text, record_rect)
         self.screen.blit(score_text, score_rect)
         self.screen.blit(lines_text, lines_rect)
+        self.screen.blit(lvl_text, lvl_rect)
 
     def pause(self):
         pause = pygame.Surface((600, 500), pygame.SRCALPHA)
