@@ -2,304 +2,10 @@ import sys
 import random
 import time
 import pygame
-
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-YELLOW = (255, 255, 0)
-PURPLE = (146, 110, 174)
-colors = [GREEN, BLUE, RED, YELLOW, PURPLE]
-
-
-# background = pygame.image.load(".jpg")
-# icon = pygame.image.load(".png")
-# pygame.display.set_icon(icon)
-
-
-class Button:
-    def __init__(self, x, y, width, height, text, color_button, color_font, font):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.text = text
-        self.color_button = color_button
-        self.color_font = color_font
-        self.size = (width, height)
-        self.font = font
-
-    def draw(self, screen):
-        pygame.draw.rect(screen,
-                         self.color_button,
-                         (self.x, self.y, *self.size), 1)
-        text = self.font.render(self.text, True, self.color_font)
-        rect = text.get_rect()
-        rect.center = (int(self.x + self.width / 2), int(self.y + self.height / 2))
-        screen.blit(text, rect)
-
-    def is_clicked(self, mouse_x, mouse_y):
-        return self.x < mouse_x < self.x + self.width \
-               and self.y < mouse_y < self.y + self.height
-
-    def __str__(self):
-        return self.text
-
-
-class Figure:
-    figures = {'S': [['     ',
-                      '  xx ',
-                      ' xx  ',
-                      '     ',
-                      '     '],
-                     ['     ',
-                      '  x  ',
-                      '  xx ',
-                      '   x ',
-                      '     ']],
-               'Z': [['     ',
-                      ' xx  ',
-                      '  xx ',
-                      '     ',
-                      '     '],
-                     ['     ',
-                      '  x  ',
-                      ' xx  ',
-                      ' x   ',
-                      '     ']],
-               'J': [['     ',
-                      ' x   ',
-                      ' xxx ',
-                      '     ',
-                      '     '],
-                     ['     ',
-                      '  xx ',
-                      '  x  ',
-                      '  x  ',
-                      '     '],
-                     ['     ',
-                      ' xxx ',
-                      '   x ',
-                      '     ',
-                      '     '],
-                     ['     ',
-                      '  x  ',
-                      '  x  ',
-                      ' xx  ',
-                      '     ']],
-               'L': [['     ',
-                      '   x ',
-                      ' xxx ',
-                      '     ',
-                      '     '],
-                     ['     ',
-                      '  x  ',
-                      '  x  ',
-                      '  xx ',
-                      '     '],
-                     ['     ',
-                      ' xxx ',
-                      '   x ',
-                      '     ',
-                      '     '],
-                     ['     ',
-                      ' xx  ',
-                      '  x  ',
-                      '  x  ',
-                      '     ']],
-               'I': [['     ',
-                      '  x  ',
-                      '  x  ',
-                      '  x  ',
-                      '  x  '],
-                     ['     ',
-                      'xxxx ',
-                      '     ',
-                      '     ',
-                      '     ']],
-               'O': [['     ',
-                      ' xx  ',
-                      ' xx  ',
-                      '     ',
-                      '     ']],
-               'T': [['     ',
-                      '  x  ',
-                      ' xxx ',
-                      '     ',
-                      '     '],
-                     ['     ',
-                      '  x  ',
-                      '  xx ',
-                      '  x  ',
-                      '     '],
-                     ['     ',
-                      ' xxx ',
-                      '  x  ',
-                      '     ',
-                      '     '],
-                     ['     ',
-                      '  x  ',
-                      ' xx  ',
-                      '  x  ',
-                      '     ']]}
-
-    def __init__(self, shape: str, rotation: int, color: int):
-        self.shape = shape
-        self.rotation = rotation
-        self.fig = Figure.figures[self.shape][rotation]
-        self.color = color
-        self.x = 3
-        self.y = -1
-
-    @property
-    def get_fig_coor(self):
-        fig_coor = []
-        for i in range(5):
-            for j in range(5):
-                if self[i, j]:
-                    fig_coor.append([j, i])
-        for i in range(len(fig_coor)):
-            fig_coor[i][0] += self.x
-            fig_coor[i][1] += self.y
-        return fig_coor
-
-    @property
-    def get_color(self):
-        return colors[self.color]
-
-    def __getitem__(self, index):
-        return self.fig[index[0]][index[1]] == 'x'
-
-    @classmethod
-    def generate_figure(cls):
-        shape = random.choice(list(cls.figures.keys()))
-        rotation = random.randint(0, len(cls.figures[shape]) - 1)
-        color = random.randint(0, len(colors) - 1)
-        return cls(shape, rotation, color)
-
-    def next_rotation(self):
-        self.rotation = (self.rotation + 1) % len(Figure.figures[self.shape])
-        self.fig = Figure.figures[self.shape][self.rotation]
-
-    def previous_rotation(self):
-        self.rotation = (self.rotation - 1) % len(Figure.figures[self.shape])
-        self.fig = Figure.figures[self.shape][self.rotation]
-
-    def draw_fig(self, screen, cup_x, cup_y, block):
-        for x, y in self.get_fig_coor:
-            pygame.draw.rect(screen, self.get_color,
-                             (cup_x + block * x + 1,
-                              cup_y + block * y + 1,
-                              block - 2, block - 2))
-
-    def draw_next_fig(self, screen, block):
-        font = pygame.font.SysFont('arial', 30)
-        text = font.render('Next shape:', True, WHITE)
-        rect = text.get_rect()
-        rect.x = 425
-        rect.y = 100
-        screen.blit(text, rect)
-        pygame.draw.rect(screen, WHITE,
-                         (440, 150,
-                          block * 5, block * 5), 1)
-        for x in range(5):
-            for y in range(5):
-                if self[y, x]:
-                    pygame.draw.rect(screen, self.get_color,
-                                     (440 + block * x + 1,
-                                      150 + block * y + 1,
-                                      block - 2, block - 2))
-
-
-class Cup:
-    def __init__(self, cup_x, cup_y, block, cup_width, cup_height):
-        self.cup_width = cup_width
-        self.cup_height = cup_height
-
-        self.cup_x = cup_x
-        self.cup_y = cup_y
-
-        self.block = block
-
-        self.lines = 0
-        self.score = 0
-
-        self.cup = self.get_new_cup_list()
-
-    def get_new_cup_list(self):
-        cup = []
-        for i in range(self.cup_width):
-            cup.append([' ' for _ in range(self.cup_height)])
-        return cup
-
-    def __getitem__(self, index):
-        if isinstance(index, tuple):
-            x, y = index
-            return self.cup[x][y]
-        else:
-            return self.cup[index]
-
-    def __setitem__(self, key, value):
-        x, y = key
-        self.cup[x][y] = value
-
-    def draw(self, screen, color):
-        pygame.draw.rect(screen, color,
-                         (self.cup_x, self.cup_y,
-                          self.cup_width * self.block,
-                          self.cup_height * self.block,
-                          ), 1)
-
-        for x in range(self.cup_width):
-            for y in range(self.cup_height):
-                if self[x, y] != ' ':
-                    pygame.draw.rect(screen, colors[int(self[x, y])],
-                                     (self.cup_x + self.block * x + 1,
-                                      self.cup_y + self.block * y + 1,
-                                      self.block - 2, self.block - 2))
-
-    def add_fig(self, fig):
-        for x, y in fig.get_fig_coor:
-            self[x, y] = fig.color
-        c = 0
-        for y in range(0, 20):
-            for x in range(10):
-                if self[x, y] == ' ':
-                    break
-            else:
-                for x in range(10):
-                    self[x].pop(y)
-                    self[x].insert(0, ' ')
-                c += 1
-        if c == 1:
-            self.score += 100
-        elif c == 2:
-            self.score += 200
-        elif c == 3:
-            self.score += 700
-        elif c == 4:
-            self.score += 1500
-        self.lines += c
-
-    def check_pos(self, fig, deltax=0, deltay=0):
-        fig_coor = fig.get_fig_coor
-        for i in range(len(fig_coor)):
-            fig_coor[i][0] += deltax
-            fig_coor[i][1] += deltay
-        for x, y in fig_coor:
-            if x < 0 or x > self.cup_width - 1:
-                return False
-            if y < 0 or y > self.cup_height - 1:
-                return False
-            if self[x, y] != ' ':
-                return False
-        return True
-
-    def clear(self):
-        self.score = 0
-        self.lines = 0
-        self.cup = self.get_new_cup_list()
+from cup import Cup
+from constants import *
+from button import Button
+from figure import Figure
 
 
 class Tetris:
@@ -740,11 +446,15 @@ class Tetris:
                             self.play()
                         elif ans == 3:
                             self.exit()
+                    elif event.key == pygame.K_DOWN:
+                        speed /= 3
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_LEFT:
                         left = False
                     elif event.key == pygame.K_RIGHT:
                         right = False
+                    elif event.key == pygame.K_DOWN:
+                        speed *= 3
             if time.time() - last_fall > speed and time.time() - add_time > 0.5:
                 if self.cup.check_pos(fig, deltax=0, deltay=1):
                     fig.y += 1
@@ -770,8 +480,8 @@ class Tetris:
             self.draw_title()
             self.draw_stat(level)
             self.draw_info()
-            self.cup.draw(self.screen, WHITE)
             fig.draw_fig(self.screen, self.CUP_X, self.CUP_Y, self.BLOCK)
+            self.cup.draw(self.screen, WHITE)
             next_fig.draw_next_fig(self.screen, self.BLOCK)
             pygame.display.update()
             self.clock.tick()
