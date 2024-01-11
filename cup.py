@@ -51,10 +51,10 @@ class Cup:
             if i < self.cup_width:
                 pygame.draw.line(screen, WHITE,
                                  (self.cup_x + i * self.block, self.cup_y),
-                                 (self.cup_x + i * self.block, self.cup_y + self.block * self.cup_height), 1)
+                                 (self.cup_x + i * self.block, self.cup_y + self.block * self.cup_height - 1), 1)
             pygame.draw.line(screen, WHITE,
                              (self.cup_x, self.cup_y + self.block * i),
-                             (self.cup_x + self.cup_width * self.block, self.cup_y + self.block * i), 1)
+                             (self.cup_x + self.cup_width * self.block - 1, self.cup_y + self.block * i), 1)
 
     def add_fig(self, fig):
         for x, y in fig.get_fig_coor:
