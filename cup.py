@@ -69,14 +69,7 @@ class Cup:
                     self[x].pop(y)
                     self[x].insert(0, ' ')
                 c += 1
-        if c == 1:
-            self.score += 100
-        elif c == 2:
-            self.score += 200
-        elif c == 3:
-            self.score += 700
-        elif c == 4:
-            self.score += 1500
+        self.update_score_by_lines(c)
         self.lines += c
 
     def check_pos(self, fig, deltax=0, deltay=0):
@@ -97,3 +90,20 @@ class Cup:
         self.score = 0
         self.lines = 0
         self.cup = self.get_new_cup_list()
+
+    def update_score_by_lines(self, count_lines):
+        if count_lines == 1:
+            self.score += 100
+        elif count_lines == 2:
+            self.score += 200
+        elif count_lines == 3:
+            self.score += 700
+        elif count_lines == 4:
+            self.score += 1500
+
+    def update_score_by_falling(self, count_rotations, is_quick=False, height=None):
+        if is_quick:
+            if height >= 3:
+                self.score += max(0, 3 * height - count_rotations * 2)
+        else:
+            self.score += max(0, 10 - count_rotations * 2)

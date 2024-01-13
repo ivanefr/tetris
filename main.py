@@ -348,7 +348,7 @@ class Tetris:
         self.screen.blit(lines_text, lines_rect)
         self.screen.blit(lvl_text, lvl_rect)
 
-    def pause(self):
+    def pause_window(self):
         pause = pygame.Surface((600, 500), pygame.SRCALPHA)
         pause.fill((0, 0, 0, 127))
         self.screen.blit(pause, (0, 0))
@@ -359,15 +359,17 @@ class Tetris:
         button_continue = Button(int(self.WIDTH / 2) - 110, 150,
                                  220, 50, 'Продолжить',
                                  WHITE, WHITE, font)
-
-        button_menu = Button(int(self.WIDTH / 2) - 110, 210,
+        button_restart = Button(int(self.WIDTH / 2) - 110, 210,
+                                220, 50, 'Заново',
+                                WHITE, WHITE, font)
+        button_menu = Button(int(self.WIDTH / 2) - 110, 270,
                              220, 50, 'Меню',
                              WHITE, WHITE, font)
 
-        button_exit = Button(int(self.WIDTH / 2) - 110, 270,
+        button_exit = Button(int(self.WIDTH / 2) - 110, 330,
                              220, 50, 'Выйти',
                              WHITE, WHITE, font)
-        buttons_arr = [button_continue, button_menu, button_exit]
+        buttons_arr = [button_continue, button_menu, button_exit, button_restart]
         for button in buttons_arr:
             button.draw(self.screen)
 
@@ -377,7 +379,7 @@ class Tetris:
             pygame.display.update()
             self.clock.tick()
             btn = Tetris.wait_press(buttons_arr, k_arr=[pygame.K_SPACE])
-        d = {'Продолжить': 1, 'Меню': 2, "Выйти": 3, str(pygame.K_SPACE): 1}
+        d = {"Продолжить": 1, "Меню": 2, "Выйти": 3, str(pygame.K_SPACE): 1, "Заново": 4}
         return d[str(btn)]
 
     @staticmethod
@@ -401,6 +403,7 @@ class Tetris:
         self.draw_stat(level)
 
         self.count_figures = 0
+        rotation_count = 0
 
         self.cup.clear()
 
@@ -417,6 +420,9 @@ class Tetris:
         last_click = -1
 
         add_time = 0
+
+        quick = False
+        height = None
         while True:
             self.check_exit()
             for event in pygame.event.get():
@@ -433,19 +439,25 @@ class Tetris:
                         last_click = time.time()
                     elif event.key == pygame.K_UP:
                         fig.next_rotation()
+                        rotation_count += 1
                         if not self.cup.check_pos(fig):
                             fig.previous_rotation()
+                            rotation_count -= 1
                     elif event.key == pygame.K_RETURN:
                         for i in range(1, 20):
                             if not self.cup.check_pos(fig, deltay=i):
                                 fig.y += i - 1
+                                height = i - 1
+                                quick = True
                                 break
                     elif event.key == pygame.K_SPACE:
-                        ans = self.pause()
+                        ans = self.pause_window()
                         if ans == 2:
                             self.play()
                         elif ans == 3:
                             self.exit()
+                        elif ans == 4:
+                            self.play(level)
                     elif event.key == pygame.K_DOWN:
                         speed /= 3
                 if event.type == pygame.KEYUP:
@@ -462,6 +474,13 @@ class Tetris:
                 else:
                     self.count_figures += 1
                     self.cup.add_fig(fig)
+                    if quick:
+                        self.cup.update_score_by_falling(count_rotations=rotation_count,
+                                                         is_quick=True, height=height)
+                        quick = False
+
+                    else:
+                        self.cup.update_score_by_falling(count_rotations=rotation_count)
                     add_time = time.time()
                     fig = next_fig
                     next_fig = self.get_figure()
