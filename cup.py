@@ -105,5 +105,7 @@ class Cup:
         if is_quick:
             if height >= 3:
                 self.score += max(0, 3 * height - count_rotations * 2)
+            else:
+                self.score += max(0, 10 - count_rotations * 2)
         else:
             self.score += max(0, 10 - count_rotations * 2)

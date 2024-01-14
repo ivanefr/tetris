@@ -481,6 +481,7 @@ class Tetris:
 
                     else:
                         self.cup.update_score_by_falling(count_rotations=rotation_count)
+                    rotation_count = 0
                     add_time = time.time()
                     fig = next_fig
                     next_fig = self.get_figure()
