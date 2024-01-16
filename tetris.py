@@ -6,6 +6,7 @@ from constants import *
 from button import Button
 from figure import Figure
 import os
+import random
 
 
 class Tetris:
@@ -140,6 +141,7 @@ class Tetris:
             text = "Вы побили свой рекорд!"
             Tetris.set_record(level, self.cup.score)
             is_win = True
+            from firework import create_particles
         else:
             text = "Вы проиграли."
 
@@ -174,13 +176,19 @@ class Tetris:
 
         btn = Tetris.wait_press(buttons_arr)
         all_sprites = None
+        last_zv = None
+        count_zv = None
         if is_win:
             all_sprites = pygame.sprite.Group()
-
+            last_zv = 0
+            count_zv = 0
         while btn is None:
             if is_win:
-                from firework import create_particles
-                create_particles((100, 100), all_sprites, self.WIDTH, self.HEIGHT)
+                if count_zv < 5:
+                    create_particles((random.randint(0, self.WIDTH), random.randint(0, self.HEIGHT)),
+                                     all_sprites, self.WIDTH, self.HEIGHT)
+                    last_zv = time.time()
+                    count_zv += 1
                 all_sprites.update()
                 all_sprites.draw(self.screen)
             pygame.display.update()
