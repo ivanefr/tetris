@@ -5,6 +5,7 @@ from cup import Cup
 from constants import *
 from button import Button
 from figure import Figure
+import os
 
 
 class Tetris:
@@ -125,14 +126,20 @@ class Tetris:
         with open('records.txt', mode='w') as f:
             f.write(','.join(text))
 
+    def start_firework(self):
+        ...
+
     def end_window(self, level):
         self.screen.fill(BLACK)
         self.draw_title()
         self.update_statistic(self.count_figures)
 
+        is_win = False
+
         if self.cup.score > Tetris.get_record(level):
             text = "Вы побили свой рекорд!"
             Tetris.set_record(level, self.cup.score)
+            is_win = True
         else:
             text = "Вы проиграли."
 
@@ -166,8 +173,16 @@ class Tetris:
             btn.draw(self.screen)
 
         btn = Tetris.wait_press(buttons_arr)
+        all_sprites = None
+        if is_win:
+            all_sprites = pygame.sprite.Group()
 
         while btn is None:
+            if is_win:
+                from firework import create_particles
+                create_particles((100, 100), all_sprites, self.WIDTH, self.HEIGHT)
+                all_sprites.update()
+                all_sprites.draw(self.screen)
             pygame.display.update()
             self.clock.tick()
             btn = Tetris.wait_press(buttons_arr)
@@ -380,6 +395,15 @@ class Tetris:
             btn = Tetris.wait_press(buttons_arr, k_arr=[pygame.K_SPACE])
         d = {"Продолжить": 1, "Меню": 2, "Выйти": 3, str(pygame.K_SPACE): 1, "Заново": 4}
         return d[str(btn)]
+
+    @staticmethod
+    def load_image(name):
+        fullname = os.path.join('data', name)
+        if not os.path.isfile(fullname):
+            sys.exit()
+        image = pygame.image.load(fullname)
+        image = image.convert_alpha()
+        return image
 
     @staticmethod
     def update_statistic(count_figures):
