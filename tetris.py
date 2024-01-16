@@ -9,8 +9,6 @@ from figure import Figure
 
 class Tetris:
     def __init__(self):
-        self.FPS = 25
-
         self.WIDTH = 600
         self.HEIGHT = 500
         self.size = self.WIDTH, self.HEIGHT
@@ -21,6 +19,8 @@ class Tetris:
         self.CUP_HEIGHT = 20
         self.CUP_X = self.WIDTH // 2 - (self.CUP_WIDTH // 2) * self.BLOCK
         self.CUP_Y = 50
+
+        self.count_figures = None
 
         self.cup = Cup(self.CUP_X, self.CUP_Y, self.BLOCK, self.CUP_WIDTH, self.CUP_HEIGHT)
 
