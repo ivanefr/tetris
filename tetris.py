@@ -31,19 +31,30 @@ class Tetris:
         self.screen = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
 
-        self.FONT_COLOR = WHITE
-        self.BUTTON_COLOR = WHITE
-        self.CUP_BORDER_COLOR = WHITE
-        self.MARKING_COLOR = WHITE
-        self.BACKGROUND_COLOR = BLACK
+        colors = Tetris.get_colors()
+
+        self.FONT_COLOR = colors[0]
+        self.BUTTON_COLOR = colors[1]
+        self.CUP_BORDER_COLOR = colors[2]
+        self.MARKING_COLOR = colors[3]
+        self.BACKGROUND_COLOR = colors[4]
 
     @staticmethod
     def get_colors():
         with open("colors.txt") as f:
-            colors = f.read()
-        colors = colors.strip().split('\n')
-        colors = list(map(lambda x: x.strip().split(','), colors))
-        ...
+            text = f.read().strip()
+        colors = text.strip().split('\n')
+        res = []
+        for color in colors:
+            if color == "None":
+                res.append(None)
+                continue
+            color = color.split(',')
+            c = []
+            for i in color:
+                c.append(int(i.strip()))
+            res.append((*c,))
+        return res
 
     @staticmethod
     def check_exit():
@@ -57,6 +68,17 @@ class Tetris:
             if event.type == pygame.QUIT:
                 Tetris.exit()
             pygame.event.post(event)
+
+    def set_colors(self):
+        with open('colors.txt', mode='w') as f:
+            f.write(str(self.FONT_COLOR)[1:-1] + '\n')
+            f.write(str(self.BUTTON_COLOR)[1:-1] + '\n')
+            f.write(str(self.CUP_BORDER_COLOR)[1:-1] + '\n')
+            if self.MARKING_COLOR is None:
+                f.write("None\n")
+            else:
+                f.write(str(self.MARKING_COLOR)[1:-1] + '\n')
+            f.write(str(self.BACKGROUND_COLOR)[1:-1] + '\n')
 
     @staticmethod
     def exit():
@@ -121,6 +143,7 @@ class Tetris:
             button.draw(screen=self.screen)
 
         btn = Tetris.wait_press(buttons_arr)
+        self.set_colors()
 
         while btn is None:
             pygame.display.update()
@@ -147,7 +170,6 @@ class Tetris:
     def draw_end_window(self, level, win=False):
         self.screen.fill(self.BACKGROUND_COLOR)
         self.draw_title()
-        self.update_statistic(self.count_figures)
 
         is_win = False
 
@@ -190,9 +212,12 @@ class Tetris:
         return buttons_arr, is_win
 
     def end_window(self, level):
+        self.update_statistic(self.count_figures)
         buttons_arr, is_win = self.draw_end_window(level)
 
         btn = Tetris.wait_press(buttons_arr)
+        self.set_colors()
+
         all_sprites = None
         last_zv = None
         count_zv = None
@@ -291,6 +316,7 @@ class Tetris:
         button_exit.draw(self.screen)
 
         btn = Tetris.wait_press([button_exit])
+        self.set_colors()
 
         while btn is None:
             pygame.display.update()
@@ -299,6 +325,8 @@ class Tetris:
         self.play()
 
     def play(self, level=None):
+        self.set_colors()
+
         if level is None:
             level = self.start_window()
         if level == 5:
@@ -419,6 +447,7 @@ class Tetris:
             button.draw(self.screen)
 
         btn = Tetris.wait_press(buttons_arr, k_arr=[pygame.K_SPACE])
+        self.set_colors()
 
         while btn is None:
             pygame.display.update()

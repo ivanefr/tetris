@@ -34,6 +34,7 @@ class Settings:
             button.draw(self.screen)
 
         btn = Tetris.wait_press(buttons_arr)
+        self.set_colors()
 
         while btn is None:
             pygame.display.update()
@@ -78,12 +79,14 @@ class Settings:
         if res == str(button_white):
             self.BACKGROUND_COLOR = BG_WHITE
         elif res == str(button_red):
-            self.BACKGROUND_COLOR = RED
+            self.BACKGROUND_COLOR = BG_RED
         elif res == str(button_green):
             self.BACKGROUND_COLOR = BLACK_GREEN
         elif res == str(button_black):
             self.BACKGROUND_COLOR = BLACK
-        Settings.start_window(self)
+        elif res == str(button_exit):
+            Settings.start_window(self)
+        Settings.background_window(self)
 
     @staticmethod
     def button_window(self: Tetris):
@@ -115,7 +118,9 @@ class Settings:
             self.BUTTON_COLOR = GREEN
         elif res == str(button_black):
             self.BUTTON_COLOR = BLACK
-        Settings.start_window(self)
+        elif res == str(button_exit):
+            Settings.start_window(self)
+        Settings.button_window(self)
 
     @staticmethod
     def font_window(self: Tetris):
@@ -147,7 +152,9 @@ class Settings:
             self.FONT_COLOR = GREEN
         elif res == str(button_black):
             self.FONT_COLOR = BLACK
-        Settings.start_window(self)
+        elif res == str(button_exit):
+            Settings.start_window(self)
+        Settings.font_window(self)
 
     @staticmethod
     def cup_window(self: Tetris):
@@ -172,6 +179,7 @@ class Settings:
             button.draw(self.screen)
 
         btn = Tetris.wait_press(buttons_arr)
+        self.set_colors()
 
         while btn is None:
             pygame.display.update()
@@ -205,6 +213,8 @@ class Settings:
                 self.MARKING_COLOR = BLACK
             elif res == str(button_red):
                 self.MARKING_COLOR = RED
+            elif res == str(button_exit):
+                Settings.cup_window(self)
             Settings.cup_window(self)
         elif res == 1:
             button_white = Button(self.WIDTH / 2 - 110, 150, 220, 50,
@@ -225,6 +235,8 @@ class Settings:
                 self.CUP_BORDER_COLOR = WHITE
             elif res == str(button_red):
                 self.CUP_BORDER_COLOR = RED
+            elif res == str(button_exit):
+                Settings.cup_window(self)
             Settings.cup_window(self)
 
     @staticmethod
@@ -238,6 +250,7 @@ class Settings:
             button.draw(self.screen)
 
         btn = Tetris.wait_press(buttons_arr)
+        self.set_colors()
 
         while btn is None:
             pygame.display.update()
