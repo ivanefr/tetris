@@ -137,18 +137,17 @@ class Tetris:
         with open('records.txt', mode='w') as f:
             f.write(','.join(text))
 
-    def end_window(self, level):
+    def draw_end_window(self, level, win=False):
         self.screen.fill(self.BACKGROUND_COLOR)
         self.draw_title()
         self.update_statistic(self.count_figures)
 
         is_win = False
 
-        if self.cup.score > Tetris.get_record(level):
+        if self.cup.score > Tetris.get_record(level) or win:
             text = "Вы побили свой рекорд!"
             Tetris.set_record(level, self.cup.score)
             is_win = True
-            from firework import create_particles
         else:
             text = "Вы проиграли."
 
@@ -181,6 +180,11 @@ class Tetris:
         for btn in buttons_arr:
             btn.draw(self.screen)
 
+        return buttons_arr, is_win
+
+    def end_window(self, level):
+        buttons_arr, is_win = self.draw_end_window(level)
+
         btn = Tetris.wait_press(buttons_arr)
         all_sprites = None
         last_zv = None
@@ -189,14 +193,16 @@ class Tetris:
             all_sprites = pygame.sprite.Group()
             last_zv = 0
             count_zv = 0
+            from firework import create_particles
         while btn is None:
             if is_win:
-                if count_zv < 5:
-                    create_particles((random.randint(0, self.WIDTH), random.randint(0, self.HEIGHT)),
+                if time.time() - last_zv > 0.5 and count_zv < 5:
+                    create_particles((random.randint(100, self.WIDTH - 100), random.randint(100, self.HEIGHT -100)),
                                      all_sprites, self.WIDTH, self.HEIGHT)
                     last_zv = time.time()
                     count_zv += 1
                 all_sprites.update()
+                buttons_arr, _ = self.draw_end_window(level, is_win)
                 all_sprites.draw(self.screen)
             pygame.display.update()
             self.clock.tick()

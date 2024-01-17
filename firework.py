@@ -18,7 +18,7 @@ class Particle(pygame.sprite.Sprite):
         self.velocity = [dx, dy]
         self.rect.x, self.rect.y = pos
 
-        self.gravity = 0.05
+        self.gravity = 0.1
 
     def update(self):
         self.velocity[1] += self.gravity
@@ -29,7 +29,7 @@ class Particle(pygame.sprite.Sprite):
 
 
 def create_particles(position, all_sprites, width, height):
-    particle_count = 20
+    particle_count = 30
     numbers = range(-5, 6)
     for _ in range(particle_count):
         Particle(position, random.choice(numbers), random.choice(numbers),
