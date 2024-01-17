@@ -34,9 +34,16 @@ class Tetris:
         self.FONT_COLOR = WHITE
         self.BUTTON_COLOR = WHITE
         self.CUP_BORDER_COLOR = WHITE
-        self.IS_MARKING = True
         self.MARKING_COLOR = WHITE
         self.BACKGROUND_COLOR = BLACK
+
+    @staticmethod
+    def get_colors():
+        with open("colors.txt") as f:
+            colors = f.read()
+        colors = colors.strip().split('\n')
+        colors = list(map(lambda x: x.strip().split(','), colors))
+        ...
 
     @staticmethod
     def check_exit():
@@ -193,11 +200,11 @@ class Tetris:
             all_sprites = pygame.sprite.Group()
             last_zv = 0
             count_zv = 0
-            from firework import create_particles
         while btn is None:
             if is_win:
                 if time.time() - last_zv > 0.5 and count_zv < 5:
-                    create_particles((random.randint(100, self.WIDTH - 100), random.randint(100, self.HEIGHT -100)),
+                    from firework import create_particles
+                    create_particles((random.randint(100, self.WIDTH - 100), random.randint(100, self.HEIGHT - 100)),
                                      all_sprites, self.WIDTH, self.HEIGHT)
                     last_zv = time.time()
                     count_zv += 1
@@ -396,17 +403,17 @@ class Tetris:
         font = pygame.font.SysFont('timesnewroman', 40)
         button_continue = Button(int(self.WIDTH / 2) - 110, 150,
                                  220, 50, 'Продолжить',
-                                 WHITE, WHITE, font)
+                                 self.BUTTON_COLOR, self.FONT_COLOR, font)
         button_restart = Button(int(self.WIDTH / 2) - 110, 210,
                                 220, 50, 'Заново',
-                                WHITE, WHITE, font)
+                                self.BUTTON_COLOR, self.FONT_COLOR, font)
         button_menu = Button(int(self.WIDTH / 2) - 110, 270,
                              220, 50, 'Меню',
-                             WHITE, WHITE, font)
+                             self.BUTTON_COLOR, self.FONT_COLOR, font)
 
         button_exit = Button(int(self.WIDTH / 2) - 110, 330,
                              220, 50, 'Выйти',
-                             WHITE, WHITE, font)
+                             self.BUTTON_COLOR, self.FONT_COLOR, font)
         buttons_arr = [button_continue, button_menu, button_exit, button_restart]
         for button in buttons_arr:
             button.draw(self.screen)
@@ -446,7 +453,7 @@ class Tetris:
         self.screen.fill(self.BACKGROUND_COLOR)
 
         self.draw_title()
-        self.cup.draw(self.screen, WHITE)
+        self.cup.draw(self.screen, WHITE, self.MARKING_COLOR)
         self.draw_stat(level)
 
         self.count_figures = 0
@@ -548,10 +555,7 @@ class Tetris:
             self.draw_stat(level)
             self.draw_info()
             fig.draw_fig(self.screen, self.CUP_X, self.CUP_Y, self.BLOCK)
-            if self.IS_MARKING:
-                self.cup.draw(self.screen, self.CUP_BORDER_COLOR, self.MARKING_COLOR)
-            else:
-                self.cup.draw(self.screen, self.CUP_BORDER_COLOR)
+            self.cup.draw(self.screen, self.CUP_BORDER_COLOR, self.MARKING_COLOR)
             next_fig.draw_next_fig(self.screen, self.BLOCK)
             pygame.display.update()
             self.clock.tick()

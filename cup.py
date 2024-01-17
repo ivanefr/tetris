@@ -34,7 +34,7 @@ class Cup:
         x, y = key
         self.cup[x][y] = value
 
-    def draw(self, screen, color, marking_color=None):
+    def draw(self, screen, color, marking_color):
         pygame.draw.rect(screen, color,
                          (self.cup_x, self.cup_y,
                           self.cup_width * self.block,
@@ -48,14 +48,14 @@ class Cup:
                                       self.cup_y + self.block * y,
                                       self.block, self.block))
         if marking_color is not None:
-            for i in range(self.cup_height):
+            for i in range(1, self.cup_height):
                 if i < self.cup_width:
                     pygame.draw.line(screen, marking_color,
-                                     (self.cup_x + i * self.block, self.cup_y),
-                                     (self.cup_x + i * self.block, self.cup_y + self.block * self.cup_height - 1), 1)
+                                     (self.cup_x + i * self.block, self.cup_y + 1),
+                                     (self.cup_x + i * self.block, self.cup_y + self.block * self.cup_height - 2), 1)
                 pygame.draw.line(screen, marking_color,
-                                 (self.cup_x, self.cup_y + self.block * i),
-                                 (self.cup_x + self.cup_width * self.block - 1, self.cup_y + self.block * i), 1)
+                                 (self.cup_x + 1, self.cup_y + self.block * i),
+                                 (self.cup_x + self.cup_width * self.block - 2, self.cup_y + self.block * i), 1)
 
     def add_fig(self, fig):
         for x, y in fig.get_fig_coor:
