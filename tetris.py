@@ -3,7 +3,7 @@ import time
 import pygame
 from cup import Cup
 from constants import *
-from button import Button
+from button import Button, Button_with_image
 from figure import Figure
 import os
 import random
@@ -30,6 +30,13 @@ class Tetris:
         pygame.display.set_caption("Tetris")
         self.screen = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
+
+        self.FONT_COLOR = WHITE
+        self.BUTTON_COLOR = WHITE
+        self.CUP_BORDER_COLOR = WHITE
+        self.IS_MARKING = True
+        self.MARKING_COLOR = WHITE
+        self.BACKGROUND_COLOR = BLACK
 
     @staticmethod
     def check_exit():
@@ -66,11 +73,11 @@ class Tetris:
         return None
 
     def start_window(self):
-        self.screen.fill(BLACK)
+        self.screen.fill(self.BACKGROUND_COLOR)
         self.draw_title()
 
         font = pygame.font.SysFont('timesnewroman', 40)
-        text = font.render("Выберите уровень сложности:", True, WHITE)
+        text = font.render("Выберите уровень сложности:", True, self.FONT_COLOR)
         rect = text.get_rect()
         rect.centerx = int(self.WIDTH / 2)
         rect.y = 100
@@ -81,24 +88,27 @@ class Tetris:
         button_lvl_1 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3),
                               280, 50, "Лёгкий",
-                              WHITE, GREEN, font)
+                              self.BUTTON_COLOR, GREEN, font)
         button_lvl_2 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3) + 60,
                               280, 50, "Нормальный",
-                              WHITE, YELLOW, font)
+                              self.BUTTON_COLOR, YELLOW, font)
         button_lvl_3 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3) + 120,
                               280, 50, "Сложный",
-                              WHITE, RED, font)
+                              self.BUTTON_COLOR, RED, font)
         button_lvl_4 = Button(int(self.WIDTH / 2) - 140,
                               int(self.HEIGHT / 3) + 200,
                               280, 50, "Экстремальный",
-                              WHITE, PURPLE, font)
+                              self.BUTTON_COLOR, PURPLE, font)
         button_statistic = Button(self.WIDTH - 130, 5, 120, 30,
-                                  "Статистика", WHITE, WHITE,
+                                  "Статистика", self.BUTTON_COLOR, self.FONT_COLOR,
                                   font_statistic)
 
-        buttons_arr = [button_lvl_1, button_lvl_2, button_lvl_3, button_lvl_4, button_statistic]
+        setting_image = self.load_image("settings.png")
+        image = pygame.transform.scale(setting_image, (40, 40))
+        button_settings = Button_with_image(5, 5, 40, 40, image, self.BACKGROUND_COLOR)
+        buttons_arr = [button_lvl_1, button_lvl_2, button_lvl_3, button_lvl_4, button_statistic, button_settings]
 
         for button in buttons_arr:
             button.draw(screen=self.screen)
@@ -109,7 +119,7 @@ class Tetris:
             pygame.display.update()
             self.clock.tick()
             btn = Tetris.wait_press(buttons_arr)
-        d = {'Лёгкий': 1, "Нормальный": 2, "Сложный": 3, "Экстремальный": 4, "Статистика": 5}
+        d = {'Лёгкий': 1, "Нормальный": 2, "Сложный": 3, "Экстремальный": 4, "Статистика": 5, "settings": 6}
         return d[str(btn)]
 
     @staticmethod
@@ -127,11 +137,8 @@ class Tetris:
         with open('records.txt', mode='w') as f:
             f.write(','.join(text))
 
-    def start_firework(self):
-        ...
-
     def end_window(self, level):
-        self.screen.fill(BLACK)
+        self.screen.fill(self.BACKGROUND_COLOR)
         self.draw_title()
         self.update_statistic(self.count_figures)
 
@@ -146,12 +153,12 @@ class Tetris:
             text = "Вы проиграли."
 
         font = pygame.font.SysFont('timesnewroman', 40)
-        text1 = font.render(text, True, WHITE)
+        text1 = font.render(text, True, self.FONT_COLOR)
         rect1 = text1.get_rect()
         rect1.centerx = int(self.WIDTH / 2)
         rect1.y = 50
 
-        text2 = font.render(f'Счёт: {self.cup.score}', True, WHITE)
+        text2 = font.render(f'Счёт: {self.cup.score}', True, self.FONT_COLOR)
         rect2 = text2.get_rect()
         rect2.centerx = int(self.WIDTH / 2)
         rect2.y = 100
@@ -161,13 +168,13 @@ class Tetris:
 
         button_repeat = Button(int(self.WIDTH / 2) - 110, 150,
                                220, 50, 'Повторить',
-                               WHITE, WHITE, font)
+                               self.BUTTON_COLOR, self.FONT_COLOR, font)
         button_menu = Button(int(self.WIDTH / 2) - 110, 210,
                              220, 50, 'Меню',
-                             WHITE, WHITE, font)
+                             self.BUTTON_COLOR, self.FONT_COLOR, font)
         button_exit = Button(int(self.WIDTH / 2) - 110, 270,
                              220, 50, 'Выйти',
-                             WHITE, WHITE, font)
+                             self.BUTTON_COLOR, self.FONT_COLOR, font)
 
         buttons_arr = [button_repeat, button_menu, button_exit]
 
@@ -212,34 +219,34 @@ class Tetris:
         return int(count)
 
     def statistic_window(self):
-        self.screen.fill(BLACK)
+        self.screen.fill(self.BACKGROUND_COLOR)
         self.draw_title()
 
         small_font = pygame.font.SysFont('timesnewroman', 30)
-        play_text = small_font.render(f"Игр сыгранно: {self.get_count_games}", True, WHITE)
-        fig_text = small_font.render(f"Фигур упало: {self.get_count_figures}", True, WHITE)
+        play_text = small_font.render(f"Игр сыгранно: {self.get_count_games}", True, self.FONT_COLOR)
+        fig_text = small_font.render(f"Фигур упало: {self.get_count_figures}", True, self.FONT_COLOR)
 
         record_title_font = pygame.font.SysFont("timesnewroman", 30, bold=True)
-        record_title_text = record_title_font.render("Рекорды:", True, WHITE)
+        record_title_text = record_title_font.render("Рекорды:", True, self.FONT_COLOR)
 
         records_font = pygame.font.SysFont("timesnewroman", 35)
 
-        easy_text = records_font.render(f"Лёгкий: {self.get_record(1)}", True, WHITE)
+        easy_text = records_font.render(f"Лёгкий: {self.get_record(1)}", True, self.FONT_COLOR)
         easy_rect = easy_text.get_rect()
         easy_rect.centerx = self.WIDTH // 2
         easy_rect.y = 220
 
-        normal_text = records_font.render(f"Нормальный: {self.get_record(2)}", True, WHITE)
+        normal_text = records_font.render(f"Нормальный: {self.get_record(2)}", True, self.FONT_COLOR)
         normal_rect = normal_text.get_rect()
         normal_rect.centerx = self.WIDTH // 2
         normal_rect.y = 260
 
-        hard_text = records_font.render(f"Сложный: {self.get_record(3)}", True, WHITE)
+        hard_text = records_font.render(f"Сложный: {self.get_record(3)}", True, self.FONT_COLOR)
         hard_rect = hard_text.get_rect()
         hard_rect.centerx = self.WIDTH // 2
         hard_rect.y = 300
 
-        extreme_text = records_font.render(f"Экстремальный: {self.get_record(4)}", True, WHITE)
+        extreme_text = records_font.render(f"Экстремальный: {self.get_record(4)}", True, self.FONT_COLOR)
         extreme_rect = extreme_text.get_rect()
         extreme_rect.centerx = self.WIDTH // 2
         extreme_rect.y = 350
@@ -267,7 +274,7 @@ class Tetris:
         self.screen.blit(extreme_text, extreme_rect)
         pygame.draw.rect(self.screen, WHITE, (50, 200, 500, 230), 1)
 
-        button_exit = Button(5, 5, 40, 40, "<", WHITE, WHITE, font_exit)
+        button_exit = Button(5, 5, 40, 40, "<", self.BUTTON_COLOR, self.FONT_COLOR, font_exit)
         button_exit.draw(self.screen)
 
         btn = Tetris.wait_press([button_exit])
@@ -284,6 +291,10 @@ class Tetris:
         if level == 5:
             self.statistic_window()
             return
+        if level == 6:
+            from settings import Settings
+            Settings.start_window(self)
+            return
         self.run(level)
         ans = self.end_window(level)
         if ans == 3:
@@ -295,7 +306,7 @@ class Tetris:
 
     def draw_title(self):
         font = pygame.font.SysFont('timesnewroman', 40)
-        text = font.render("Tetris", True, WHITE)
+        text = font.render("Tetris", True, self.FONT_COLOR)
         rect = text.get_rect()
         rect.centerx = int(self.WIDTH / 2)
         rect.y = 0
@@ -318,12 +329,12 @@ class Tetris:
     def draw_info(self):
         font = pygame.font.SysFont('arial', 20)
 
-        text1 = font.render("esc - exit", True, WHITE)
+        text1 = font.render("esc - exit", True, self.FONT_COLOR)
         rect1 = text1.get_rect()
         rect1.x = 20
         rect1.y = 50
 
-        text2 = font.render("space - pause", True, WHITE)
+        text2 = font.render("space - pause", True, self.FONT_COLOR)
         rect2 = text2.get_rect()
         rect2.x = 20
         rect2.y = 100
@@ -333,7 +344,7 @@ class Tetris:
 
     def draw_stat(self, level):
         font_stat = pygame.font.SysFont('arial', 40, bold=True)
-        stat = font_stat.render('Statistic:', True, WHITE)
+        stat = font_stat.render('Statistic:', True, self.FONT_COLOR)
         stat_rect = stat.get_rect()
         stat_rect.centerx = 100
         stat_rect.y = 200
@@ -343,24 +354,24 @@ class Tetris:
                          (10, 250, 170, 200), 1)
 
         font = pygame.font.SysFont('timesnewroman', 20, italic=True)
-        lines_text = font.render(f"Lines: {self.cup.lines}", True, WHITE)
+        lines_text = font.render(f"Lines: {self.cup.lines}", True, self.FONT_COLOR)
         lines_rect = lines_text.get_rect()
         lines_rect.x = 15
         lines_rect.y = 260
 
-        score_text = font.render(f"Score: {self.cup.score}", True, WHITE)
+        score_text = font.render(f"Score: {self.cup.score}", True, self.FONT_COLOR)
         score_rect = score_text.get_rect()
         score_rect.x = 15
         score_rect.y = 300
 
-        record_text = font.render(f"Record: {self.get_record(level)}", True, WHITE)
+        record_text = font.render(f"Record: {self.get_record(level)}", True, self.FONT_COLOR)
         record_rect = record_text.get_rect()
         record_rect.x = 15
         record_rect.y = 340
 
         levels = ["Easy", "Normal", "Hard", "Extreme"]
 
-        lvl_text = font.render(f"Level: {levels[level - 1]}", True, WHITE)
+        lvl_text = font.render(f"Level: {levels[level - 1]}", True, self.FONT_COLOR)
         lvl_rect = lvl_text.get_rect()
         lvl_rect.x = 15
         lvl_rect.y = 380
@@ -372,9 +383,8 @@ class Tetris:
 
     def pause_window(self):
         pause = pygame.Surface((600, 500), pygame.SRCALPHA)
-        pause.fill((0, 0, 0, 127))
+        pause.fill((*self.BACKGROUND_COLOR, 127))
         self.screen.blit(pause, (0, 0))
-        # self.screen.fill(BLACK)
         self.draw_title()
 
         font = pygame.font.SysFont('timesnewroman', 40)
@@ -427,7 +437,7 @@ class Tetris:
             f.write(','.join([str(c_games), str(c_figures)]))
 
     def run(self, level):
-        self.screen.fill(BLACK)
+        self.screen.fill(self.BACKGROUND_COLOR)
 
         self.draw_title()
         self.cup.draw(self.screen, WHITE)
@@ -527,12 +537,15 @@ class Tetris:
                     fig.x += 1
                 last_click = time.time()
 
-            self.screen.fill(BLACK)
+            self.screen.fill(self.BACKGROUND_COLOR)
             self.draw_title()
             self.draw_stat(level)
             self.draw_info()
             fig.draw_fig(self.screen, self.CUP_X, self.CUP_Y, self.BLOCK)
-            self.cup.draw(self.screen, WHITE)
+            if self.IS_MARKING:
+                self.cup.draw(self.screen, self.CUP_BORDER_COLOR, self.MARKING_COLOR)
+            else:
+                self.cup.draw(self.screen, self.CUP_BORDER_COLOR)
             next_fig.draw_next_fig(self.screen, self.BLOCK)
             pygame.display.update()
             self.clock.tick()

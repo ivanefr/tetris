@@ -28,3 +28,17 @@ class Button:
 
     def __str__(self):
         return self.text
+
+
+class Button_with_image(Button):
+    def __init__(self, x, y, width, height, image: pygame.Surface, color_button):
+        self.image = image
+        super().__init__(x, y, width, height, 'settings', color_button, None, None)
+
+    def draw(self, screen):
+        pygame.draw.rect(screen,
+                         self.color_button,
+                         (self.x, self.y, *self.size), 1)
+        rect = self.image.get_rect()
+        rect.center = (int(self.x + self.width / 2), int(self.y + self.height / 2))
+        screen.blit(self.image, rect)
