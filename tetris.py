@@ -41,7 +41,7 @@ class Tetris:
 
     @staticmethod
     def get_colors():
-        with open("colors.txt") as f:
+        with open("data/colors.txt") as f:
             text = f.read().strip()
         colors = text.strip().split('\n')
         res = []
@@ -70,7 +70,7 @@ class Tetris:
             pygame.event.post(event)
 
     def set_colors(self):
-        with open('colors.txt', mode='w') as f:
+        with open('data/colors.txt', mode='w') as f:
             f.write(str(self.FONT_COLOR)[1:-1] + '\n')
             f.write(str(self.BUTTON_COLOR)[1:-1] + '\n')
             f.write(str(self.CUP_BORDER_COLOR)[1:-1] + '\n')
@@ -154,17 +154,17 @@ class Tetris:
 
     @staticmethod
     def get_record(level):
-        with open('records.txt') as f:
+        with open('data/records.txt') as f:
             text = f.read()
         return int(text.strip().split(',')[level - 1])
 
     @staticmethod
     def set_record(level, record):
-        with open('records.txt') as f:
+        with open('data/records.txt') as f:
             text = f.read()
         text = text.strip().split(',')
         text[level - 1] = str(record)
-        with open('records.txt', mode='w') as f:
+        with open('data/records.txt', mode='w') as f:
             f.write(','.join(text))
 
     def draw_end_window(self, level, win=False):
@@ -244,14 +244,14 @@ class Tetris:
 
     @property
     def get_count_games(self):
-        with open("statistic.txt") as f:
+        with open("data/statistic.txt") as f:
             text = f.read().strip()
         count, _ = text.split(',')
         return int(count)
 
     @property
     def get_count_figures(self):
-        with open("statistic.txt") as f:
+        with open("data/statistic.txt") as f:
             text = f.read().strip()
         _, count = text.split(',')
         return int(count)
@@ -467,7 +467,7 @@ class Tetris:
 
     @staticmethod
     def update_statistic(count_figures):
-        with open("statistic.txt") as f:
+        with open("data/statistic.txt") as f:
             text = f.read().strip().split(',')
         c_games, c_figures = text
         c_games = int(c_games)
@@ -475,7 +475,7 @@ class Tetris:
         c_games += 1
         c_figures += count_figures
 
-        with open("statistic.txt", mode='w') as f:
+        with open("data/statistic.txt", mode='w') as f:
             f.write(','.join([str(c_games), str(c_figures)]))
 
     def run(self, level):
