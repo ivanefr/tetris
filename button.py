@@ -30,7 +30,7 @@ class Button:
         return self.text
 
 
-class Button_with_image(Button):
+class ButtonWithImage(Button):
     def __init__(self, x, y, width, height, image: pygame.Surface, color_button):
         self.image = image
         super().__init__(x, y, width, height, 'settings', color_button, None, None)
