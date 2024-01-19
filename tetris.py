@@ -3,7 +3,7 @@ import time
 import pygame
 from cup import Cup
 from constants import *
-from button import Button, Button_with_image
+from button import Button, ButtonWithImage
 from figure import Figure
 import os
 import random
@@ -136,7 +136,7 @@ class Tetris:
 
         setting_image = self.load_image("settings.png")
         image = pygame.transform.scale(setting_image, (40, 40))
-        button_settings = Button_with_image(5, 5, 40, 40, image, self.BACKGROUND_COLOR)
+        button_settings = ButtonWithImage(5, 5, 40, 40, image, self.BACKGROUND_COLOR)
         buttons_arr = [button_lvl_1, button_lvl_2, button_lvl_3, button_lvl_4, button_statistic, button_settings]
 
         for button in buttons_arr:
@@ -269,39 +269,16 @@ class Tetris:
 
         records_font = pygame.font.SysFont("timesnewroman", 35)
 
-        easy_text = records_font.render(f"Лёгкий: {self.get_record(1)}", True, self.FONT_COLOR)
-        easy_rect = easy_text.get_rect()
-        easy_rect.centerx = self.WIDTH // 2
-        easy_rect.y = 220
-
-        normal_text = records_font.render(f"Нормальный: {self.get_record(2)}", True, self.FONT_COLOR)
-        normal_rect = normal_text.get_rect()
-        normal_rect.centerx = self.WIDTH // 2
-        normal_rect.y = 260
-
-        hard_text = records_font.render(f"Сложный: {self.get_record(3)}", True, self.FONT_COLOR)
-        hard_rect = hard_text.get_rect()
-        hard_rect.centerx = self.WIDTH // 2
-        hard_rect.y = 300
-
-        extreme_text = records_font.render(f"Экстремальный: {self.get_record(4)}", True, self.FONT_COLOR)
-        extreme_rect = extreme_text.get_rect()
-        extreme_rect.centerx = self.WIDTH // 2
-        extreme_rect.y = 350
+        easy_text, easy_rect = self.get_lvl_rect("Лёгкий", 220, records_font)
+        normal_text, normal_rect = self.get_lvl_rect("Нормальный", 260, records_font)
+        hard_text, hard_rect = self.get_lvl_rect("Сложный", 300, records_font)
+        extreme_text, extreme_rect = self.get_lvl_rect("Экстремальный", 350, records_font)
 
         font_exit = pygame.font.SysFont('arial', 30)
 
-        play_rect = play_text.get_rect()
-        play_rect.x = 50
-        play_rect.y = 80
-
-        fig_rect = fig_text.get_rect()
-        fig_rect.x = 50
-        fig_rect.y = 120
-
-        record_title_rect = record_title_text.get_rect()
-        record_title_rect.x = 50
-        record_title_rect.y = 160
+        play_rect = self.get_rect(play_text, 50, 80)
+        fig_rect = self.get_rect(fig_text, 50, 120)
+        record_title_rect = self.get_rect(record_title_text, 50, 160)
 
         self.screen.blit(play_text, play_rect)
         self.screen.blit(fig_text, fig_rect)
@@ -323,6 +300,21 @@ class Tetris:
             self.clock.tick()
             btn = Tetris.wait_press([button_exit])
         self.play()
+
+    def get_lvl_rect(self, lvl_text, y, font):
+        num = {"Лёгкий": 1, "Нормальный": 2, "Сложный": 3, "Экстремальный": 4}[lvl_text]
+        easy_text = font.render(f"{lvl_text}: {self.get_record(num)}", True, self.FONT_COLOR)
+        easy_rect = easy_text.get_rect()
+        easy_rect.centerx = self.WIDTH // 2
+        easy_rect.y = y
+        return easy_text, easy_rect
+
+    @staticmethod
+    def get_rect(text, x, y):
+        rect = text.get_rect()
+        rect.x = x
+        rect.y = y
+        return rect
 
     def play(self, level=None):
         self.set_colors()

@@ -60,9 +60,6 @@ class Figure:
         rect.x = 425
         rect.y = 100
         screen.blit(text, rect)
-        pygame.draw.rect(screen, WHITE,
-                         (440, 150,
-                          block * 5, block * 5), 1)
         for x in range(5):
             for y in range(5):
                 if self[y, x]:
