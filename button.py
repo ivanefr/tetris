@@ -24,7 +24,7 @@ class Button:
 
     def is_clicked(self, mouse_x, mouse_y):
         return self.x < mouse_x < self.x + self.width \
-               and self.y < mouse_y < self.y + self.height
+            and self.y < mouse_y < self.y + self.height
 
     def __str__(self):
         return self.text
